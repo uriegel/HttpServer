@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using HttpServer.Interfaces;
 
-namespace HttpServer
+namespace HttpServer.Enums
 {
-    abstract class Service : IService
+    public enum XFrameOptions
     {
+        NotSet,
+        DENY,
+        SAMEORIGIN
     }
 }

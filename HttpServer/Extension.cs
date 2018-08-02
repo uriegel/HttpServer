@@ -9,6 +9,7 @@ using HttpServer.Enums;
 using HttpServer.Exceptions;
 using HttpServer.Interfaces;
 using HttpServer.Sessions;
+using HttpServer.WebSockets;
 
 namespace HttpServer
 {

@@ -5,6 +5,8 @@ using System.Linq;
 using System.Net;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
+using HttpServer.Enums;
+using HttpServer.Isapi;
 
 namespace HttpServer
 {
@@ -40,7 +42,7 @@ namespace HttpServer
 
         public int SocketTimeout { get; set; } = 20000;
         public List<Extension> Extensions { get; } = new List<Extension>();
-        public List<Isapi> Isapis { get; } = new List<Isapi>();
+        public List<IsapiExtension> Isapis { get; } = new List<IsapiExtension>();
         public List<Redirection> Redirections { get; } = new List<Redirection>();
         public List<Alias> Aliases { get; } = new List<Alias>();
         public string DomainName { get; set; }
@@ -78,9 +80,6 @@ namespace HttpServer
 
         public Configuration()
         {
-            var caesarFolder = new CaesarFolder(CaesarModule.WebServer);
-            this.ConfigFolder = caesarFolder.ConfigurationPath;
-            this.InstallFolder = caesarFolder.InstallPath;
         }
 
         string[] InitializeAppCaches()
@@ -92,36 +91,17 @@ namespace HttpServer
             {
                 var file = Path.Combine(Webroot, appcache);
                 var root = Path.GetDirectoryName(file);
-                using (StreamReader sr = new StreamReader(file))
+                using (var sr = new StreamReader(file))
                 {
-                    string content = sr.ReadToEnd();
-                    int start = content.IndexOf("CACHE:\r\n") + 8;
-                    int stop = content.IndexOf("\r\n\r\n", start);
-                    string caches = content.Substring(start, stop - start);
+                    var content = sr.ReadToEnd();
+                    var start = content.IndexOf("CACHE:\r\n") + 8;
+                    var stop = content.IndexOf("\r\n\r\n", start);
+                    var caches = content.Substring(start, stop - start);
                     var cacheFiles = caches.Split(new[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
                     ncf = ncf.Concat(cacheFiles.Select(n => Path.Combine(root, n.Replace('/', '\\')).ToLower()));
                 }
             }
             return ncf.ToArray();
-        }
-
-        public ProxyRedirection CheckProxyRedirection(string urlBase)
-        {
-            return ProxyRedirections.FirstOrDefault(n => urlBase.StartsWith(n.RedirectionBaseUrl, StringComparison.CurrentCultureIgnoreCase));
-        }
-
-        public void EnableDefaultPHPSupport()
-        {
-            var ini = new IniSettings(Path.Combine(this.ConfigFolder, "cws.net.ini"));
-            var php_ini = new IniSettings(Path.Combine(this.ConfigFolder, "php.ini"));
-
-            FastCGIScripts.Add(new FastCGIScript(this, ".php",
-                new FastCGIHandler(commandLine: $"\"{(Path.Combine(this.InstallFolder, @"php\php-cgi.exe"))}\" -c \"{(Path.Combine(this.ConfigFolder, @"php.ini"))}\"",
-                                maxProcesses: ini.GetInt("FastCGI_php", "MaxProcesses", FastCGIHandler.DEF_MAX_PROCESSES),
-                                maxParallelRequestsPerProcess: ini.GetInt("FastCGI_php", "MaxParallelRequestsPerProcess", FastCGIHandler.DEF_MAX_PARALLELREQUESTSPERPROCESS),
-                                maxRequestsPerProcess: ini.GetInt("FastCGI_php", "MaxRequestsPerProcess", FastCGIHandler.DEF_MAX_REQUESTSPERPROCESS),
-                                timeOut: ini.GetInt("FastCGI_php", "MaxExecutionTime", php_ini.GetInt("PHP", "max_execution_time", FastCGIHandler.DEF_TIMEOUT - 1) + 1),
-                                configuration: this)));
         }
 
         #endregion

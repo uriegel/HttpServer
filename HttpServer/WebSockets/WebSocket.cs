@@ -5,9 +5,13 @@ using System.Text;
 using System.Threading.Tasks;
 using HttpServer.Interfaces;
 
-namespace HttpServer
+namespace HttpServer.WebSockets
 {
-    abstract class Service : IService
+    class WebSocket : IWebSocket
     {
+        public WebSocket(WebSocketSession session)
+        {
+
+        }
     }
 }

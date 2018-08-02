@@ -3,11 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using HttpServer.Interfaces;
 
-namespace HttpServer
+namespace HttpServer.Interfaces
 {
-    abstract class Service : IService
+    interface IWebSocket
     {
     }
 }

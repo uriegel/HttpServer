@@ -17,6 +17,6 @@ namespace HttpServer.Interfaces
         /// <param name="path">Der Pfad zur gewünschten Ergebnis-HTML</param>
         /// <param name="urlQuery">Query-Komponenten, welche die Formular-Parameter enthalten</param>
         /// <returns>Die Ergebnis-HTML-Seite</returns>
-        Task<string> OnSubmitAsync(ISession session, Method method, string path, Web.UrlQueryComponents urlQuery);
+        Task<string> OnSubmitAsync(ISession session, Method method, string path, UrlQueryComponents urlQuery);
     }
 }

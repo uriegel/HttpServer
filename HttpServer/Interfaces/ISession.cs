@@ -8,5 +8,7 @@ namespace HttpServer.Interfaces
 {
     public interface ISession
     {
+        void Close();
+        Task SendExceptionAsync(Exception e);
     }
 }

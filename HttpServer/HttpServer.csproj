@@ -41,9 +41,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Alias.cs" />
     <Compile Include="Configuration.cs" />
     <Compile Include="Counter.cs" />
     <Compile Include="Enums\Method.cs" />
+    <Compile Include="Enums\XFrameOptions.cs" />
     <Compile Include="Exceptions\NotInitializedException.cs" />
     <Compile Include="Extension.cs" />
     <Compile Include="ExtensionFactory.cs" />
@@ -51,16 +53,21 @@
     <Compile Include="Interfaces\IFormHandler.cs" />
     <Compile Include="Interfaces\IServer.cs" />
     <Compile Include="Interfaces\ISession.cs" />
+    <Compile Include="Interfaces\IWebSocket.cs" />
     <Compile Include="Interfaces\IWebSocketsConsumer.cs" />
-    <Compile Include="IService.cs" />
+    <Compile Include="Interfaces\IService.cs" />
+    <Compile Include="Isapi\Isapi.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ProxyRedirection.cs" />
+    <Compile Include="Redirection.cs" />
     <Compile Include="Server.cs" />
     <Compile Include="Service.cs" />
     <Compile Include="Sessions\RequestSession.cs" />
     <Compile Include="UrlParts.cs" />
     <Compile Include="UrlQueryComponents.cs" />
     <Compile Include="UrlUtility.cs" />
+    <Compile Include="WebSockets\WebSocket.cs" />
     <Compile Include="WebSockets\WebSocketSession.cs" />
   </ItemGroup>
   <ItemGroup />
