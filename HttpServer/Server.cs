@@ -251,13 +251,13 @@ namespace HttpServer
                 Configuration.Certificate = store.Certificates.Cast<X509Certificate2>().Where(n => n.FriendlyName == Configuration.CertificateName).FirstOrDefault();
                 if (Configuration.Certificate == null)
                 {
-                    var userName = System.Security.Principal.WindowsIdentity.GetCurrent().Name;
-                    Logger.Current.Info($"Searching in current user store: {userName}");
-                    store = new X509Store(StoreLocation.CurrentUser);
-                    store.Open(OpenFlags.ReadOnly);
-                    Configuration.Certificate = store.Certificates.Cast<X509Certificate2>().Where(n => n.FriendlyName == Configuration.CertificateName).FirstOrDefault();
-                    if (Configuration.Certificate != null)
-                        Logger.Current.Info($"Using certificate from current user store: {userName}");
+                    //var userName = System.Security.Principal.WindowsIdentity.GetCurrent().Name;
+                    //Logger.Current.Info($"Searching in current user store: {userName}");
+                    //store = new X509Store(StoreLocation.CurrentUser);
+                    //store.Open(OpenFlags.ReadOnly);
+                    //Configuration.Certificate = store.Certificates.Cast<X509Certificate2>().Where(n => n.FriendlyName == Configuration.CertificateName).FirstOrDefault();
+                    //if (Configuration.Certificate != null)
+                    //    Logger.Current.Info($"Using certificate from current user store: {userName}");
                 }
                 if (Configuration.Certificate != null)
                     Logger.Current.Info($"Using certificate {Configuration.Certificate}");
