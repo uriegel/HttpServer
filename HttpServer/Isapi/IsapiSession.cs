@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HttpServer.WebSockets
+namespace HttpServer.Isapi
 {
-    class WebSocketSession
+    class IsapiSession
     {
         public static Counter Instances { get; } = new Counter();
     }

@@ -12,6 +12,8 @@ namespace HttpServer.Sessions
     {
         public string Id { get; }
 
+        public static Counter Instances { get; } = new Counter();
+
         public Server Server { get; private set; }
 
         public Service GetServiceInfo()
@@ -38,6 +40,16 @@ namespace HttpServer.Sessions
                     // SocketSession.Client.Client.Shutdown(SocketShutdown.Send);
             }
             catch { }
+        }
+
+        public async Task SendHtmlStringAsync(string html)
+        {
+            var bytes = Encoding.UTF8.GetBytes(html);
+            //responseHeaders.Add("Content-Length", $"{bytes.Length}");
+            //responseHeaders.Add("Content-Type", "text/html; charset=UTF-8");
+            //var headerBuffer = responseHeaders.Access(SocketSession.UseTls, HttpResponseString, Headers);
+            //await WriteAsync(headerBuffer, 0, headerBuffer.Length);
+            //await WriteAsync(bytes, 0, bytes.Length);
         }
 
     }

@@ -4,10 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HttpServer.WebSockets
+namespace HttpServer.Enums
 {
-    class WebSocketSession
+    public enum TlsProtocol
     {
-        public static Counter Instances { get; } = new Counter();
+        Tls10,
+        Tls11,
+        Tls12
     }
 }

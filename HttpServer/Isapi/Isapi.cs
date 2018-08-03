@@ -8,5 +8,6 @@ namespace HttpServer.Isapi
 {
     public class IsapiExtension
     {
+        public void Terminate() { }
     }
 }

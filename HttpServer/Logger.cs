@@ -16,6 +16,7 @@ namespace HttpServer
 
         public void Fatal(string text) => Log(LogLevel.Fatal, text);
         public void Error(string text) => Log(LogLevel.Error, text);
+        public void Warning(string text) => Log(LogLevel.Warning, text);
         public void Info(string text) => Log(LogLevel.Info, text);
         public void Trace(string text) => Log(LogLevel.Trace, text);
         public void LowTrace(Func<string> getText)

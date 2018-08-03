@@ -53,7 +53,7 @@ namespace HttpServer
         public bool TlsTracing { get; set; }
         public bool TlsRedirect { get; set; }
         public X509Certificate2 Certificate { get; set; }
-        public SslProtocols TlsProtocols { get; set; } = SslProtocols.Tls | SslProtocols.Tls11 | SslProtocols.Tls12;
+        public TlsProtocol LowestProtocol { get; set; }
         public bool CheckRevocation { get; set; }
 
         public string[] AppCaches { get; set; }
@@ -73,6 +73,22 @@ namespace HttpServer
         public int HstsDurationInSeconds { get; set; }
 
         public XFrameOptions XFrameOptions { get; set; }
+
+        internal SslProtocols TlsProtocols
+        {
+            get
+            {
+                switch (LowestProtocol)
+                {
+                    default:
+                        return SslProtocols.Tls | SslProtocols.Tls11 | SslProtocols.Tls12;
+                    case TlsProtocol.Tls11:
+                        return SslProtocols.Tls11 | SslProtocols.Tls12;
+                    case TlsProtocol.Tls12:
+                        return SslProtocols.Tls12;
+                }
+            }
+        }
 
         #endregion
 

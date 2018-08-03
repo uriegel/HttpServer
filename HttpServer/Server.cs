@@ -4,11 +4,14 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
+using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using HttpServer.Extensions;
 using HttpServer.Interfaces;
+using HttpServer.Sessions;
 
 namespace HttpServer
 {
@@ -99,6 +102,146 @@ namespace HttpServer
 
         #region Methods
 
+        public void Start()
+        {
+            try
+            {
+                Logger.Current.Info("Starting Web Server");
+                Resources.Current.Initialize();
+                Initialize();
+
+                if (listener != null)
+                {
+                    Logger.Current.Info("Starting HTTP listener...");
+                    listener.Start();
+                    Logger.Current.Info("HTTP listener started");
+                }
+                if (tlsListener != null)
+                {
+                    Logger.Current.Info("Starting HTTPS listener...");
+                    tlsListener.Start();
+                    Logger.Current.Info("HTTPS listener started");
+                }
+
+                IsStarted = true;
+                if (listener != null)
+                    StartConnecting(listener, false);
+                if (tlsListener != null)
+                    StartConnecting(tlsListener, true);
+
+                if (tlsRedirectorListener != null)
+                {
+                    Logger.Current.Info("Starting HTTP redirection listener...");
+                    tlsRedirectorListener.Start();
+                    StartTlsRedirecting();
+                    Logger.Current.Info("HTTPS redirection listener started");
+                }
+
+                if (Configuration.HstsDurationInSeconds > 0)
+                {
+                    if (Configuration.IsTlsEnabled && Configuration.TlsRedirect)
+                        Logger.Current.Info($"Using HSTS: max-days={Configuration.HstsDurationInSeconds / (3600 * 24)}, max-age={Configuration.HstsDurationInSeconds}");
+                    else
+                    {
+                        Logger.Current.Warning($"HSTS is only available when 'TlsEnabled=true' and 'TlsRedirect=true'");
+                        Configuration.HstsDurationInSeconds = 0;
+                    }
+                }
+
+                Logger.Current.Info("Web Server started");
+            }
+            catch (SocketException se) when (se.SocketErrorCode == SocketError.AddressAlreadyInUse)
+            {
+                throw;
+            }
+            catch (Exception e)
+            {
+                IsStarted = false;
+                Logger.Current.Warning($"Could not start HTTP Listener: {e}");
+            }
+        }
+
+        public void Stop()
+        {
+            try
+            {
+                Logger.Current.Info("Terminating managed extensions...");
+
+                var tasks = Configuration.Extensions.Select(n => n.ShutdownAsync());
+                Task.WhenAll(tasks.ToArray()).Synchronize();
+
+                Logger.Current.Info("Managed extensions terminated");
+
+                IsStarted = false;
+
+                if (listener != null)
+                {
+                    Logger.Current.Info("Stopping HTTP listener...");
+                    listener.Stop();
+                    Logger.Current.Info("HTTP listener stopped");
+                }
+
+                if (tlsListener != null)
+                {
+                    Logger.Current.Info("Stopping HTTPS listener...");
+                    tlsListener.Stop();
+                    Logger.Current.Info("HTTPS listener stopped");
+                }
+                if (tlsRedirectorListener != null)
+                {
+                    Logger.Current.Info("Stopping HTTPS redirection listener...");
+                    tlsRedirectorListener.Stop();
+                    Logger.Current.Info("HTTPS redirection listener stopped");
+                }
+
+                Logger.Current.Info("Terminating isapis...");
+                var isapis = Configuration.Isapis.ToArray();
+                Configuration.Isapis.Clear();
+                foreach (var isapi in isapis)
+                    isapi.Terminate();
+                Logger.Current.Info("isapis terminated");
+            }
+            catch (Exception e)
+            {
+                Logger.Current.Warning($"Could not stop web server: {e}");
+            }
+        }
+
+        public void SetAlias(string value, string path) => Configuration.Aliases.Add(new Alias(value, path, null));
+
+        public void RegisterCounter(string name, Func<int[]> getCounter)
+            => Resources.Current.RegisterCounter(name, getCounter);
+
+        public void RegisterAsyncFormHandler(string path, IFormHandler formHandler)
+            => Extension.FormHandlers[path] = formHandler;
+
+        public void InitializeExtensions()
+        {
+            ThreadPool.QueueUserWorkItem(async s =>
+            {
+                Logger.Current.Info($"Initializing extensions");
+
+                var tasks = Configuration.Extensions.Select(n => n.InitializeAsync(this)).ToArray();
+                try
+                {
+                    await Task.WhenAll(tasks);
+                }
+                catch { }
+            });
+        }
+
+        void Initialize()
+        {
+            try
+            {
+                Logger.Current.Info($"Supported secure protocols: {Configuration.TlsProtocols}");
+            }
+            catch (Exception e)
+            {
+                Logger.Current.Warning($"An error has occurred while initializing: {e}");
+            }
+        }
+
         void InitializeTls()
         {
             var store = new X509Store(StoreLocation.LocalMachine);
@@ -123,6 +266,83 @@ namespace HttpServer
             }
             if (Configuration.CheckRevocation)
                 Logger.Current.Info("Checking revocation lists");
+        }
+
+        void StartConnecting(TcpListener listener, bool isSecured)
+        {
+            if (!IsStarted)
+                return;
+
+            new Thread(() =>
+            {
+                try
+                {
+                    while (IsStarted)
+                    {
+                        var client = listener.AcceptTcpClient();
+                        OnConnected(client, isSecured);
+                    }
+                }
+                catch (SocketException se) when (se.SocketErrorCode == SocketError.Interrupted && !IsStarted)
+                {
+                }
+                catch (Exception e)
+                {
+                    Logger.Current.Fatal($"Error occurred in connecting thread: {e}");
+                }
+            })
+            {
+                IsBackground = true
+            }.Start();
+        }
+
+        void StartTlsRedirecting()
+        {
+            new Thread(() =>
+            {
+                try
+                {
+                    while (IsStarted)
+                    {
+                        var client = tlsRedirectorListener.AcceptTcpClient();
+                        var redirectSession = new TlsRedirectSession(this, client);
+                        redirectSession.TlsRedirect();
+                    }
+                }
+                catch (SocketException se) when (se.SocketErrorCode == SocketError.Interrupted && !IsStarted)
+                {
+                }
+                catch (Exception e)
+                {
+                    Logger.Current.Fatal($"Error in StartTlsRedirecting occurred: {e}");
+                }
+            })
+            {
+                IsBackground = true
+            }.Start();
+        }
+
+        void OnConnected(TcpClient tcpClient, bool isSecured)
+        {
+            try
+            {
+                if (!IsStarted)
+                    return;
+                SocketSession.StartReceiving(this, tcpClient, isSecured);
+            }
+            catch (SocketException se) when (se.NativeErrorCode == 10054)
+            { }
+            catch (ObjectDisposedException)
+            {
+                // Stop() aufgerufen
+                return;
+            }
+            catch (Exception e)
+            {
+                if (!IsStarted)
+                    return;
+                Logger.Current.Fatal($"Error in OnConnected occurred: {e}");
+            }
         }
 
         #endregion
