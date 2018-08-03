@@ -11,7 +11,7 @@ namespace HttpServer
     {
         public static Logger Current { get; } = new Logger();
 
-        public LogLevel MinLogLevel { get; set; } 
+        public LogLevel MinLogLevel { get; set; } = LogLevel.Trace;
         public bool LowTraceEnabled { get; set; } 
 
         public void Fatal(string text) => Log(LogLevel.Fatal, text);
@@ -61,6 +61,7 @@ namespace HttpServer
                                 writer = Console.Out;
                                 break;
                         }
+                        writer.WriteLine(text);
                     }
                     finally
                     {

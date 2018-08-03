@@ -49,6 +49,7 @@
     <Compile Include="Exceptions\NotInitializedException.cs" />
     <Compile Include="Extension.cs" />
     <Compile Include="ExtensionFactory.cs" />
+    <Compile Include="Extensions\SocketExtensions.cs" />
     <Compile Include="Interfaces\IExtension.cs" />
     <Compile Include="Interfaces\IFormHandler.cs" />
     <Compile Include="Interfaces\IServer.cs" />
@@ -56,6 +57,7 @@
     <Compile Include="Interfaces\IWebSocket.cs" />
     <Compile Include="Interfaces\IWebSocketsConsumer.cs" />
     <Compile Include="Interfaces\IService.cs" />
+    <Compile Include="Ipv6TcpListenerFactory.cs" />
     <Compile Include="Isapi\Isapi.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

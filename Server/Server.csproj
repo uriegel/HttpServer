@@ -50,5 +50,11 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\HttpServer\HttpServer.csproj">
+      <Project>{FB2F1CA6-C8E9-4534-AA8C-F3159A07E856}</Project>
+      <Name>HttpServer</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
