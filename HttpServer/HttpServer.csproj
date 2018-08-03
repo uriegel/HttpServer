@@ -47,11 +47,14 @@
     <Compile Include="Enums\Method.cs" />
     <Compile Include="Enums\TlsProtocols.cs" />
     <Compile Include="Enums\XFrameOptions.cs" />
+    <Compile Include="Exceptions\ConnectionClosedException.cs" />
+    <Compile Include="Exceptions\InvalidPathException.cs" />
     <Compile Include="Exceptions\NotInitializedException.cs" />
     <Compile Include="Extension.cs" />
     <Compile Include="ExtensionFactory.cs" />
     <Compile Include="Extensions\SocketExtensions.cs" />
     <Compile Include="Extensions\TaskExtensions.cs" />
+    <Compile Include="Headers\ServerResponseHeaders.cs" />
     <Compile Include="Interfaces\IExtension.cs" />
     <Compile Include="Interfaces\IFormHandler.cs" />
     <Compile Include="Interfaces\IServer.cs" />
