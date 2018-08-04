@@ -7,7 +7,11 @@ namespace Server
     {
         static void Main(string[] args)
         {
-            var configuration = new Configuration();
+            var configuration = new Configuration
+            {
+                Webroot = @"..\..\..\..\..\SuperfitUI\dist\superfitui",
+                IsTlsEnabled = true
+            };
             var server = new HttpServer.Server(configuration);
             server.Start();
             Console.WriteLine("Press any key to stop...");

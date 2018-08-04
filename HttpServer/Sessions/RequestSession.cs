@@ -962,19 +962,7 @@ h1 {
             }
 
             if (File.Exists(localFile))
-            {
-                // do not deliver files from main install folder
-                if (localFile.Length >= Server.Configuration.InstallFolder.Length &&
-                    localFile.StartsWith(Server.Configuration.InstallFolder) &&
-                    (localFile.Length == Server.Configuration.InstallFolder.Length ||
-                    -1 == localFile.IndexOf('\\', Server.Configuration.InstallFolder.Length + 1)))
-                {
-                    localFile = "";
-                    return false;
-                }
-
                 return true;
-            }
 
             if (Directory.Exists(localFile))
             {
