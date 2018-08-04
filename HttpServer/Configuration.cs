@@ -42,7 +42,7 @@ namespace HttpServer
 
         public int SocketTimeout { get; set; } = 20000;
         public List<Extension> Extensions { get; } = new List<Extension>();
-        public List<IsapiExtension> Isapis { get; } = new List<IsapiExtension>();
+        public List<Isapi.Isapi> Isapis { get; } = new List<Isapi.Isapi>();
         public List<Redirection> Redirections { get; } = new List<Redirection>();
         public List<Alias> Aliases { get; } = new List<Alias>();
         public string DomainName { get; set; }

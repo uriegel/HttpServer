@@ -9,6 +9,7 @@ using HttpServer.Enums;
 using HttpServer.Exceptions;
 using HttpServer.Interfaces;
 using HttpServer.Sessions;
+using HttpServer.WebService;
 using HttpServer.WebSockets;
 
 namespace HttpServer
@@ -101,7 +102,7 @@ namespace HttpServer
             Service service = null;
             try
             {
-                service = session.GetServiceInfo() as Service;
+                service = await session.GetServiceInfoAsync() as Service;
                 Instances.Increment();
 
                 if (session.CheckWsUpgrade())

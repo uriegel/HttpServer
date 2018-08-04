@@ -6,8 +6,15 @@ using System.Threading.Tasks;
 
 namespace HttpServer.Isapi
 {
-    public class IsapiExtension
+    public class Isapi
     {
+        public string Url { get; private set; }
+
         public void Terminate() { }
+
+        internal IsapiSession CreateRequest()
+        {
+            return null;
+        }
     }
 }
