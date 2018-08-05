@@ -8,25 +8,33 @@ namespace HttpServer.Http2
     {
         public const int Size = 9;
 
-        public enum Flags : byte
-        {
-            NotSet = 0x0,
-            Ack = 0x1
-        }
-
-        public Frame(int length, Type type, byte flag, long streamId, byte[] payload)
+        public Frame(int length, Type type, byte flags, long streamId, byte[] payload)
         {
             Length = length;
             Type = type;
-            Flag = (Flags)flag;
+            this.flags = flags;
             StreamId = streamId;
             Payload = payload;
         }
 
+        public byte[] Serialize()
+        {
+            if (Length == 0)
+            {
+                var result = new byte[Size];
+                result[3] = (byte)Type;
+                result[4] = flags;
+                //result[5] = StreamId;
+                return result;
+            }
+            else
+                throw new NotImplementedException();
+        }
+
         public readonly int Length;
         public readonly Type Type;
-        public readonly Flags Flag;
         public readonly long StreamId;
+        protected readonly byte flags;
         readonly byte[] Payload;
     }
 }
