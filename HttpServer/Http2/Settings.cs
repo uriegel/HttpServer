@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace HttpServer.Http2
@@ -37,7 +38,21 @@ namespace HttpServer.Http2
         public Settings(int length, Type type, byte flags, long streamId, byte[] payload)
             : base(length, type, flags, streamId, payload)
         {
-            var count = (payload.Length - 2) / 6;
+            var count = (payload.Length) / 6;
+            values = Enumerable.Repeat(0, count).Select((_, i) =>
+            {
+                var shortValue = new byte[2];
+                shortValue[0] = payload[(i * 6) + 1];
+                shortValue[1] = payload[(i * 6)];
+                var id = (Identifier)BitConverter.ToInt16(shortValue);
+                var value = new byte[4];
+                value[0] = payload[(i * 6) + 5];
+                value[1] = payload[(i * 6) + 4];
+                value[2] = payload[(i * 6) + 3];
+                value[3] = payload[(i * 6) + 2];
+                var val = BitConverter.ToInt32(value);
+                return new KeyValuePair<Identifier, int>(id, val);
+            }).ToDictionary(k => k.Key, v => v.Value);
         }
 
         Dictionary<Identifier, int> values = new Dictionary<Identifier, int>();

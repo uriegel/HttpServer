@@ -8,18 +8,24 @@ namespace HttpServer.Http2
     {
         public const int Size = 9;
 
-        public Frame(int length, Type type, byte flags, long streamId, byte[] payload)
+        public enum Flags : byte
+        {
+            NotSet = 0x0,
+            Ack = 0x1
+        }
+
+        public Frame(int length, Type type, byte flag, long streamId, byte[] payload)
         {
             Length = length;
             Type = type;
-            Flags = flags;
+            Flag = (Flags)flag;
             StreamId = streamId;
             Payload = payload;
         }
 
         public readonly int Length;
         public readonly Type Type;
-        public readonly byte Flags;
+        public readonly Flags Flag;
         public readonly long StreamId;
         readonly byte[] Payload;
     }
