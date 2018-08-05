@@ -7,10 +7,12 @@ namespace Server
     {
         static void Main(string[] args)
         {
+            Logger.Current.MinLogLevel = Logger.LogLevel.LowTrace;
             var configuration = new Configuration
             {
                 Webroot = @"..\..\..\..\..\SuperfitUI\dist\superfitui",
-                IsTlsEnabled = true
+                IsTlsEnabled = true,
+                HTTP2 = true
             };
             var server = new HttpServer.Server(configuration);
             server.Start();

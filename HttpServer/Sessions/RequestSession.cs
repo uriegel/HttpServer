@@ -90,7 +90,7 @@ namespace HttpServer.Sessions
         /// 
         /// </summary>
         /// <returns>True: In dieser SocketSession weitermachen, ansonsten Verarbeitung abbrechen</returns>
-        public async Task<bool> StartAsync()
+        public virtual async Task<bool> StartAsync()
         {
             try
             {
@@ -391,6 +391,8 @@ h1 {
 
         public Task<bool> RedirectAsync(string url) => RedirectAsync(url, false);
 
+        public Stream GetNetworkStream() => networkStream;
+
         async Task<bool> ReceiveAsync(int bufferPosition)
         {
             try
@@ -549,8 +551,6 @@ h1 {
             }
         }
 
-        public Stream GetNetworkStream() => networkStream;
-
         ExtensionResult? CheckExtension(string url)
         {
             return (from ext in Server.Configuration.Extensions
@@ -605,7 +605,7 @@ h1 {
             var contentLength = end - start + 1;
             if (string.IsNullOrEmpty(contentType))
                 contentType = "video/mp4";
-            string headerString =
+            var headerString =
 $@"{HttpResponseString} 206 Partial Content
 ETag: ""0815""
 Accept-Ranges: bytes
@@ -1089,7 +1089,7 @@ h1 {
 
         const string webSocketKeyConcat = "60E914E4-18BE-4BC3-BC0B-C513D13E7021";
         ServerResponseHeaders responseHeaders;
-        Stream networkStream;
+        protected Stream networkStream;
         Stopwatch stopwatch;
         // TODO: muss kurzlebig sein!!
         byte[] readBuffer = new byte[80000]; // Muss unter 85kB sein, sonst landet der Buffer im LOH

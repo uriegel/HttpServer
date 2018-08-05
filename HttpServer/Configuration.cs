@@ -40,6 +40,7 @@ namespace HttpServer
             }
         }
 
+        public bool HTTP2 { get; set; }
         public int SocketTimeout { get; set; } = 20000;
         public List<Extension> Extensions { get; } = new List<Extension>();
         public List<Isapi.Isapi> Isapis { get; } = new List<Isapi.Isapi>();

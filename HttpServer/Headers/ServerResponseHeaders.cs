@@ -144,7 +144,7 @@ namespace HttpServer.Headers
             var headerLines = headers.Select(n => $"{n.Key}: {n.Value}");
             var headerString = $"{httpResponseString} {Status} {StatusDescription}\r\n" + string.Join("\r\n", headerLines) + "\r\n\r\n";
 
-            if (server.Configuration.HeaderTracing && Logger.Current.LowTraceEnabled)
+            if (server.Configuration.HeaderTracing && Logger.Current.MinLogLevel == Logger.LogLevel.LowTrace)
             {
                 Logger.Current.Trace($"{sessionId} Sending response");
                 var headers = headerString.Split(new[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);

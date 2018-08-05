@@ -27,6 +27,8 @@ namespace HttpServer.Sessions
 
         public int Id { get; private set; }
 
+        public bool HTTP2 { get; private set; }
+
         public TcpClient Client { get; private set; }
 
         public bool UseTls { get; }
@@ -65,9 +67,9 @@ namespace HttpServer.Sessions
                 while (true)
                 {
                     if (networkStream == null)
-                        networkStream = UseTls ? GetTlsNetworkStream(Client) : Client.GetStream();
+                        networkStream = UseTls ? await GetTlsNetworkStreamAsync(Client) : Client.GetStream();
 
-                    using (var session = new RequestSession(server, this, networkStream))
+                    using (var session = HTTP2 ? new RequestSession2(server, this, networkStream) : new RequestSession(server, this, networkStream))
                     {
                         id = session.Id;
                         if (!await session.StartAsync())
@@ -101,24 +103,29 @@ namespace HttpServer.Sessions
 
         protected virtual void DecrementInstance() => Instances.Decrement();
 
-        static Stream GetTlsNetworkStream(NetworkStream stream, X509Certificate2 certificate)
-        {
-            var sslStream = new SslStream(stream);
-            // TODO: einstellbar
-            sslStream.AuthenticateAsServer(certificate, false, System.Security.Authentication.SslProtocols.Tls | System.Security.Authentication.SslProtocols.Tls11 | System.Security.Authentication.SslProtocols.Tls12, true);
-            var welches = sslStream.SslProtocol;
-            return sslStream;
-        }
-
-        Stream GetTlsNetworkStream(TcpClient tcpClient)
+        async Task<Stream> GetTlsNetworkStreamAsync(TcpClient tcpClient)
         {
             var stream = tcpClient.GetStream();
             if (!server.Configuration.IsTlsEnabled)
                 return null;
 
             var sslStream = new SslStream(stream);
-            sslStream.AuthenticateAsServer(server.Configuration.Certificate, false, server.Configuration.TlsProtocols, server.Configuration.CheckRevocation);
+            var authOptions = new SslServerAuthenticationOptions
+            {
+                ApplicationProtocols = new List<SslApplicationProtocol>(),
+                EnabledSslProtocols = SslProtocols.Tls12,
+                AllowRenegotiation = false,
+                CertificateRevocationCheckMode = server.Configuration.CheckRevocation ? X509RevocationMode.Online : X509RevocationMode.NoCheck,
+                ClientCertificateRequired = false,
+                EncryptionPolicy = EncryptionPolicy.RequireEncryption,
+                ServerCertificate = server.Configuration.Certificate,
+                ServerCertificateSelectionCallback = null
+            };
 
+            if (server.Configuration.HTTP2)
+                authOptions.ApplicationProtocols.Add(SslApplicationProtocol.Http2);
+            authOptions.ApplicationProtocols.Add(SslApplicationProtocol.Http11);
+            await sslStream.AuthenticateAsServerAsync(authOptions, new CancellationToken(false));
             Logger.Current.LowTrace(() =>
             {
                 Func<SslStream, string> getKeyExchangeAlgorithm = n => (int)n.KeyExchangeAlgorithm == 44550 ? "ECDHE" : $"{n.KeyExchangeAlgorithm}";
@@ -134,9 +141,18 @@ namespace HttpServer.Sessions
                             return $"{n.HashAlgorithm}";
                     }
                 };
-                return $"{Id}- Secure protocol: {sslStream.SslProtocol}, Cipher: {sslStream.CipherAlgorithm} strength {sslStream.CipherStrength}, Key exchange: {getKeyExchangeAlgorithm(sslStream)} strength {sslStream.KeyExchangeStrength}, Hash: {getHashAlgorithm(sslStream)} strength {sslStream.HashStrength}";
+                return
+$@"{Id}- secure protocol: {sslStream.SslProtocol}
+   cipher: {sslStream.CipherAlgorithm} 
+   strength {sslStream.CipherStrength}, 
+   key exchange: {getKeyExchangeAlgorithm(sslStream)} 
+   strength {sslStream.KeyExchangeStrength}
+   hash: {getHashAlgorithm(sslStream)} 
+   strength {sslStream.HashStrength}
+   application protocol: {sslStream.NegotiatedApplicationProtocol}";
             });
 
+            HTTP2 = sslStream.NegotiatedApplicationProtocol == SslApplicationProtocol.Http2;
             return sslStream;
         }
 

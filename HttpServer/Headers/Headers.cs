@@ -84,7 +84,7 @@ namespace HttpServer.Headers
         /// <param name="recentbufferPosition">Die momentane Position im Netzwerkstrom</param>
         /// <param name="tracing"></param>
         /// <param name="sessionID"></param>
-        public async Task<Result> InitializeAsync(Stream networkStream, byte[] buffer, int recentbufferPosition, bool tracing, object sessionID)
+        public virtual async Task<Result> InitializeAsync(Stream networkStream, byte[] buffer, int recentbufferPosition, bool tracing, object sessionID)
         {
             var result = await ReadHeaderFromStreamAsync(networkStream, buffer, recentbufferPosition);
             var headerParts = result.headerString.Split(new[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
@@ -126,6 +126,7 @@ namespace HttpServer.Headers
         {
             var index = 0;
             var read = recentbufferPosition;
+
             while (true)
             {
                 for (var i = index; i < Math.Min(read + index, buffer.Length); i++)

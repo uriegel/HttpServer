@@ -7,12 +7,11 @@ using System.Threading.Tasks;
 
 namespace HttpServer
 {
-    class Logger
+    public class Logger
     {
         public static Logger Current { get; } = new Logger();
 
         public LogLevel MinLogLevel { get; set; } = LogLevel.Trace;
-        public bool LowTraceEnabled { get; set; } 
 
         public void Fatal(string text) => Log(LogLevel.Fatal, text);
         public void Error(string text) => Log(LogLevel.Error, text);
@@ -21,7 +20,7 @@ namespace HttpServer
         public void Trace(string text) => Log(LogLevel.Trace, text);
         public void LowTrace(Func<string> getText)
         {
-            if (LowTraceEnabled)
+            if (MinLogLevel == LogLevel.LowTrace)
                 Log(LogLevel.LowTrace, getText());
         }
     
