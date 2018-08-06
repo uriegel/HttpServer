@@ -38,16 +38,18 @@ namespace HttpServer.Http2
 
             switch (frame.Type)
             {
-                case Type.SETTINGS:
-                    var s = frame as Settings;
-                    var ackSettings = new Settings(0, Type.SETTINGS, SettingsFlags.Ack, s.StreamId, null);
+                case FrameType.SETTINGS:
+                    var settings = frame as Settings;
+                    settings.Values?.TryGetValue(Settings.Identifier.SETTINGS_HEADER_TABLE_SIZE, out maxHeaderTableSize);
+                    var ackSettings = Settings.CreateAck(settings.StreamId);
                     await SendFrameAsync(ackSettings);
                     break;
-                case Type.WINDOW_UPDATE:
+                case FrameType.WINDOW_UPDATE:
                     var wu = frame as WindowUpdate;
                     break;
-                case Type.HEADERS:
-                    var h = frame as Headers;
+                case FrameType.HEADERS:
+                    hpackDecoder = new HPack.Decoder(frame as Headers, maxHeaderTableSize);
+                    hpackDecoder.Decode();
                     break;
             }
             return true;
@@ -73,22 +75,16 @@ namespace HttpServer.Http2
             intValue[1] = header[1];
             intValue[2] = header[0];
             var length = BitConverter.ToInt32(intValue);
-            var type = (Http2.Type)header[3];
-            var flags = header[4];
-            intValue[0] = header[8];
-            intValue[1] = header[7];
-            intValue[2] = header[6];
-            intValue[3] = header[5];
-            var streamId = BitConverter.ToInt32(intValue);
+            var type = (FrameType)header[3];
             var payload = await ReadAsync(length);
             switch (type)
             {
-                case Http2.Type.SETTINGS:
-                    return new Settings(length, type, (SettingsFlags)flags, streamId, payload);
-                case Http2.Type.WINDOW_UPDATE:
-                    return new WindowUpdate(length, type, flags, streamId, payload);
-                case Http2.Type.HEADERS:
-                    return new Headers(length, type, (HeadersFlags)flags, streamId, payload);
+                case FrameType.SETTINGS:
+                    return new Settings(header, payload);
+                case FrameType.WINDOW_UPDATE:
+                    return new WindowUpdate(header, payload);
+                case FrameType.HEADERS:
+                    return new Headers(header, payload);
                 default:
                     throw new Exception("Frame type not supported");
             }
@@ -101,5 +97,7 @@ namespace HttpServer.Http2
         }
 
         const string check = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n";
+        int maxHeaderTableSize;
+        HPack.Decoder hpackDecoder;
     }
 }

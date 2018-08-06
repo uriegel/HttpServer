@@ -8,7 +8,7 @@ namespace HttpServer.Http2
 {
     class Settings : Frame
     {
-        enum Identifier : short
+        public enum Identifier : short
         {
             /// <summary>
             /// Changes the maximum size of the header table used for HPACK. Default: 4096
@@ -36,15 +36,17 @@ namespace HttpServer.Http2
             SETTINGS_MAX_HEADER_LIST_SIZE = 0x6 
         }
 
-        public SettingsFlags Flags { get => (SettingsFlags)flags; }
+        public Dictionary<Identifier, int> Values { get; }
 
-        public Settings(int length, Type type, SettingsFlags flags, long streamId, byte[] payload)
-            : base(length, type, (byte)flags, streamId, payload)
+        public SettingsFlags Flags { get => (SettingsFlags)RawFlags; }
+
+        public Settings(byte[] header, byte[] payload)
+            : base(header, payload)
         {
             if (payload != null)
             {
                 var count = (payload.Length) / 6;
-                values = Enumerable.Repeat(0, count).Select((_, i) =>
+                Values = Enumerable.Repeat(0, count).Select((_, i) =>
                 {
                     var shortValue = new byte[2];
                     shortValue[0] = payload[(i * 6) + 1];
@@ -61,6 +63,16 @@ namespace HttpServer.Http2
             }
         }
 
-        Dictionary<Identifier, int> values = new Dictionary<Identifier, int>();
+        public static Settings CreateAck(int streamId)
+        {
+            var header = new byte[Size];
+            header[3] = (byte)FrameType.SETTINGS;
+            header[4] = (byte)SettingsFlags.Ack;
+            var bytes = BitConverter.GetBytes(streamId);
+            header[8] = bytes[0];
+            header[7] = bytes[1];
+            header[6] = bytes[2];
+            return new Settings(header, null);
+        }
     }
 }
