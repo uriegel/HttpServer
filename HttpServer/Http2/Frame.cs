@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using HttpServer.Enums;
 
 namespace HttpServer.Http2
 {
@@ -8,33 +9,51 @@ namespace HttpServer.Http2
     {
         public const int Size = 9;
 
-        public Frame(int length, Type type, byte flags, long streamId, byte[] payload)
+        public int Length
         {
-            Length = length;
-            Type = type;
-            this.flags = flags;
-            StreamId = streamId;
-            Payload = payload;
+            get
+            {
+                var bytes = new byte[4];
+                bytes[0] = header[2];
+                bytes[1] = header[1];
+                bytes[2] = header[0];
+                return BitConverter.ToInt32(bytes);
+            }
+        }
+
+        public FrameType Type { get => (FrameType)header[3]; }
+
+        public byte RawFlags { get => header[4]; }
+
+        public int StreamId
+        {
+            get
+            {
+                var bytes = new byte[4];
+                bytes[0] = header[8];
+                bytes[1] = header[7];
+                bytes[2] = header[6];
+                bytes[3] = (byte)(header[5] & ~0x1);
+                return BitConverter.ToInt32(bytes);
+            }
+        }
+
+        public Frame(byte[] header, byte[] payload)
+        {
+            this.header = header;
+            this.payload = payload;
         }
 
         public byte[] Serialize()
         {
-            if (Length == 0)
-            {
-                var result = new byte[Size];
-                result[3] = (byte)Type;
-                result[4] = flags;
-                //result[5] = StreamId;
-                return result;
-            }
-            else
-                throw new NotImplementedException();
+            var result = new byte[header.Length + (payload?.Length ?? 0)];
+            Array.Copy(header, result, header.Length);
+            if (payload != null)
+                Array.Copy(payload, header.Length, result, 0, payload.Length);
+            return result;
         }
 
-        public readonly int Length;
-        public readonly Type Type;
-        public readonly long StreamId;
-        protected readonly byte flags;
-        readonly byte[] Payload;
+        protected readonly byte[] header;
+        protected readonly byte[] payload;
     }
 }

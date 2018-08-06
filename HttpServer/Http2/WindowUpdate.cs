@@ -6,17 +6,22 @@ namespace HttpServer.Http2
 {
     class WindowUpdate : Frame
     {
-        public readonly int SizeIncrement;
-
-        public WindowUpdate(int length, Type type, byte flags, long streamId, byte[] payload)
-            : base(length, type, flags, streamId, payload)
+        public int SizeIncrement
         {
-            var value = new byte[4];
-            value[0] = payload[3];
-            value[1] = payload[2];
-            value[2] = payload[1];
-            value[3] = payload[0];
-            SizeIncrement = BitConverter.ToInt32(value);
+            get
+            {
+                var value = new byte[4];
+                value[0] = payload[3];
+                value[1] = payload[2];
+                value[2] = payload[1];
+                value[3] = (byte)(payload[0] & ~0x1);
+                return BitConverter.ToInt32(value);
+            }
+        }
+
+        public WindowUpdate(byte[] header, byte[] payload)
+            : base(header, payload)
+        {
         }
     }
 }

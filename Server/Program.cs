@@ -10,7 +10,8 @@ namespace Server
             Logger.Current.MinLogLevel = Logger.LogLevel.LowTrace;
             var configuration = new Configuration
             {
-                Webroot = @"..\..\..\..\..\SuperfitUI\dist\superfitui",
+//                Webroot = @"..\..\..\..\..\SuperfitUI\dist\superfitui",
+                Webroot = @"C:\Program Files\caesar\CAEWebSrv\web",
                 IsTlsEnabled = true,
                 HTTP2 = true
             };

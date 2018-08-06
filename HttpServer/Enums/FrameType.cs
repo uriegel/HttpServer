@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace HttpServer.Http2
+namespace HttpServer.Enums
 {
-    enum Type : byte
+    enum FrameType : byte
     {
         /// <summary>
         /// Carries the core content for a stream

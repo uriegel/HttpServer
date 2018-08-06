@@ -249,7 +249,6 @@ namespace HttpServer
             store.Open(OpenFlags.ReadOnly);
             if (Configuration.Certificate == null)
             {
-                var affe = new X509Certificate2();
                 Configuration.Certificate = store.Certificates.Cast<X509Certificate2>().Where(n => n.FriendlyName == Configuration.CertificateName).FirstOrDefault();
                 if (Configuration.Certificate == null)
                 {
