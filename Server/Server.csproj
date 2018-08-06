@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Http2\Http2.fsproj" />
     <ProjectReference Include="..\HttpServer\HttpServer.csproj" />
   </ItemGroup>
 
