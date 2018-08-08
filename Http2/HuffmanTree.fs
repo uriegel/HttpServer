@@ -587,7 +587,7 @@ module HuffmanTree =
             else 
                 modifiedTree
 
-        buildTree (Some (Branch { Node0 = None; Node1 = None }))
+        buildTree None
 
     let huffmanTree = buildTree ()
 
