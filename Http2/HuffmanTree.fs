@@ -576,15 +576,20 @@ module HuffmanTree =
                         Node1 = subBranch.Node1
                     }
         
-        let mutable tree = None
-        for (symbol, length, value) in huffmanTuples do
-            tree <- Some (insert tree symbol length value)
-        tree
+        
+        let enumerator = huffmanTuples.GetEnumerator ()
+        let result = enumerator.MoveNext () 
+        let rec buildTree tree = 
+            let (symbol, length, value) = enumerator.Current
+            let modifiedTree = insert tree symbol length value
+            if enumerator.MoveNext () then
+                buildTree (Some modifiedTree)
+            else 
+                modifiedTree
 
-    let huffmanTree = 
-        match (buildTree ()) with 
-        | Some tree -> tree
-        | None -> failwith("Could not create huffman tree")
+        buildTree (Some (Branch { Node0 = None; Node1 = None }))
+
+    let huffmanTree = buildTree ()
 
     let rec gebeAus node (path: string) = 
         match node with
