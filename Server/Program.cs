@@ -9,6 +9,9 @@ namespace Server
     {
         static void Main(string[] args)
         {
+            var mist = Http2.HuffmanTree.huffmanTree;
+            Console.WriteLine("");
+
             void ToString(Node node, string path = "")
             {
                 if (node.Node0 != null)

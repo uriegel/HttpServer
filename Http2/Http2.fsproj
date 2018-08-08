@@ -5,6 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="HuffmanTree.fs" />
     <Compile Include="Huffman.fs" />
   </ItemGroup>
 
