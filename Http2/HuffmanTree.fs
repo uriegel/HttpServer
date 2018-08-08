@@ -600,6 +600,31 @@ module HuffmanTree =
 
     gebeAus huffmanTree ""
 
+    let affe = [| 
+        1 
+        2 
+        3 
+        4 
+        5 
+        6 
+        7 
+    |]
+    let swein = [| 
+        1 
+        2 
+        3 
+    |]
+
+    let hund = 
+        affe 
+        |> Seq.map (fun n -> 
+            swein 
+            |> Seq.map (fun m -> (n,m)))
+        |> Seq.collect (fun n->n)
+
+    let hundd = Seq.toArray hund
+    let wal = hundd
+
 
 //// TODO: Test
 //    let test = 
