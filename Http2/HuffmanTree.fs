@@ -1,6 +1,6 @@
 ﻿namespace Http2
 
-module HuffmanTree = 
+module internal HuffmanTree = 
 
     type Node =
         | Branch of Nodes
@@ -14,7 +14,7 @@ module HuffmanTree =
         match nodeOption with
         | Some node ->
             match node with
-            | Leaf _ -> failwith "No subtree but leaf"
+            | Leaf _ -> failwith "leaf alredy set"
             | Branch branch ->
                 match is0 with
                 | true -> branch.Node0
@@ -557,17 +557,7 @@ module HuffmanTree =
                 Leaf value
             else 
                 let firstBit = symbol >>> (length - 1)
-                let subtree = 
-                    match treeOption with
-                        | None -> None
-                        | Some tree -> 
-                            match tree with 
-                            | Branch branch -> 
-                                match firstBit with
-                                |1 -> branch.Node1
-                                |_ -> branch.Node0
-                            | Leaf _-> failwith "leaf alredy set" 
-                
+                let subtree = getSubtree treeOption (firstBit = 0)
                 let newNode = insert subtree (symbol &&& ((1 <<< (length - 1)) - 1)) (length - 1) value
                 let subBranch = 
                     match treeOption with
@@ -588,7 +578,7 @@ module HuffmanTree =
         
         
         let enumerator = huffmanTuples.GetEnumerator ()
-        let result = enumerator.MoveNext () 
+        enumerator.MoveNext () |> ignore
         let rec buildTree tree = 
             let (symbol, length, value) = enumerator.Current
             let modifiedTree = insert tree symbol length value

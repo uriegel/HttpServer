@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using HttpServer;
 
 namespace Server
@@ -8,7 +9,14 @@ namespace Server
         static void Main(string[] args)
         {
             var encoded = new byte[] { 0x20, 0xd0, 0xb1, 0x7c, 0x2c, 0x41, 0x95, 0x03, 0xb1, 0x66, 0x57, 0xb6, 0x31, 0x2e, 0x41, 0x95, 0x7a, 0x0e, 0x41, 0xd1, 0x71, 0xe0, 0x3c, 0x0f };
-            Console.WriteLine(Http2.Huffman.decode(encoded));
+            Console.WriteLine(Http2.Huffman.Decode(encoded));
+
+            using (var strom = File.OpenRead(@"..\..\..\header.txt"))
+            {
+                var bytes = new byte[strom.Length];
+                strom.Read(bytes, 0, bytes.Length);
+                Http2.HPack.Decode(new MemoryStream(bytes));
+            }
 
             Logger.Current.MinLogLevel = Logger.LogLevel.LowTrace;
             var configuration = new Configuration

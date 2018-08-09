@@ -6,13 +6,14 @@ open System.IO
 open HuffmanTree
 
 module Huffman = 
+
     open System.Text
 
-    let writeByte (stream: Stream) byte =
+    let private writeByte (stream: Stream) byte =
         let oneByte = [| byte |]
         stream.Write(oneByte, 0, 1)
 
-    let decode (bytes: byte[]) = 
+    let Decode (bytes: byte[]) = 
         let decodedStream = new MemoryStream (bytes.Length * 2)
         let bitIndeces = [|0..7|]
         Array.Reverse bitIndeces

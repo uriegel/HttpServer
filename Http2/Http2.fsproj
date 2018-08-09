@@ -7,6 +7,7 @@
   <ItemGroup>
     <Compile Include="HuffmanTree.fs" />
     <Compile Include="Huffman.fs" />
+    <Compile Include="HPack.fs" />
   </ItemGroup>
 
 </Project>

@@ -12,6 +12,7 @@ namespace HttpServer.Http2
         public byte PadLength { get => payload[0]; }
         public bool E { get => (payload[1] & 1) != 0; }
         public byte[] Payload { get => payload; }
+        //public Stream Stream { get; }
         
         public int StreamDependency
         {
@@ -33,8 +34,8 @@ namespace HttpServer.Http2
         {
             //try
             //{
-            //    //using (var strom = File.OpenWrite(@"d:\affe.txt"))
-            //    //    strom.Write(payload, 6, payload.Length - 6);
+            //    using (var strom = File.OpenWrite(@"d:\affe.txt"))
+            //        strom.Write(payload, 6, payload.Length - 6);
             //}
             //catch (Exception e)
             //{
