@@ -3,13 +3,23 @@
 module HuffmanTree = 
 
     type Node =
-        // first value when decoder encounters 0, second when 1
         | Branch of Nodes
         | Leaf of int
     and Nodes = {
         Node0: Node Option
         Node1: Node Option
     }
+
+    let getSubtree nodeOption is0 =
+        match nodeOption with
+        | Some node ->
+            match node with
+            | Leaf _ -> failwith "No subtree but leaf"
+            | Branch branch ->
+                match is0 with
+                | true -> branch.Node0
+                | false -> branch.Node1
+        | None -> None
 
     let buildTree () =
         /// <summary>
@@ -591,67 +601,3 @@ module HuffmanTree =
 
     let huffmanTree = buildTree ()
 
-    let rec gebeAus node (path: string) = 
-        match node with
-        | Branch branch -> 
-            if branch.Node0.IsSome then gebeAus branch.Node0.Value (path+"0")
-            if branch.Node1.IsSome then gebeAus branch.Node1.Value (path+"1")
-        | Leaf value -> printfn "%s %d" path value
-
-    gebeAus huffmanTree ""
-
-    let affe = [| 
-        1 
-        2 
-        3 
-        4 
-        5 
-        6 
-        7 
-    |]
-    let swein = [| 
-        1 
-        2 
-        3 
-    |]
-
-    let hund = 
-        affe 
-        |> Seq.map (fun n -> 
-            swein 
-            |> Seq.map (fun m -> (n,m)))
-        |> Seq.collect (fun n->n)
-
-    let hundd = Seq.toArray hund
-    let wal = hundd
-
-
-//// TODO: Test
-//    let test = 
-//        Seq.toArray huffmanTuples 
-
-//    let Wert = Leaf 1234
-
-//    let knoten: Nodes = {
-//        Node0 =  None
-//        Node1 = None
-//    }
-
-//    let zwischenbaum = Branch {
-//        Node0 = Some Wert
-//        Node1 = Some (Leaf 12341)
-//    }
-
-//    let zwischenbaum3 = Branch {
-//        Node0 = Some zwischenbaum
-//        Node1 = None
-//    }
-
-
-//    let Baum = Branch {
-//        Node0 = Some zwischenbaum3
-//        Node1 = Some (Leaf 999)
-//    }
-
-
-    
