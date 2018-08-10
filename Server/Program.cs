@@ -15,7 +15,7 @@ namespace Server
             {
                 var bytes = new byte[strom.Length];
                 strom.Read(bytes, 0, bytes.Length);
-                Http2.HPack.Decode(new MemoryStream(bytes));
+                var result = Http2.HPack.Decode(new MemoryStream(bytes));
             }
 
             Logger.Current.MinLogLevel = Logger.LogLevel.LowTrace;

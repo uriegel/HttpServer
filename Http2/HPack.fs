@@ -7,14 +7,25 @@ open System.Text
 // https://httpwg.org/specs/rfc7541.html
 module HPack =
 
-    type State = 
+    type HeaderField = 
+        | FieldIndex of byte
+        | Field of Field
+    and Field = {
+        Key: Key
+        Value: string
+    }
+    and Key = 
+        | Index of byte
+        | Key of string
+
+    type internal State = 
         ReadHeaderRepresentation = 0 
         | ReadIndexedHeader = 2
         | IndexedHeaderName = 3
         | ReadLiteralHeaderNameLengthPrefix = 4
         | ReadLiteralHeaderValueLengthPrefix = 8
 
-    type IndexType = Incremental = 0 | None = 1| Never = 2
+    type internal IndexType = Incremental = 0 | None = 1| Never = 2
 
     let Decode (payload: Stream) = 
         use binaryReader = new BinaryReader (payload)
@@ -30,74 +41,55 @@ module HPack =
             else
                 Encoding.UTF8.GetString bytes
 
-        let getHeaderName () = 
-            ()
-
-        let getHeaderFromIndex index =
-            ()
-        
         let decodeIndexedHeaderField firstByte =
-            ()
+            FieldIndex (firstByte &&& 0x7Fuy)
 
         let decodeLiteralHeaderField firstByte =
             let decodeWithIncrementalIndex () = 
                 let index = firstByte &&& 0x3Fuy // 00111111
-                let key = 
-                    match index with 
-                    | 0uy -> getHeaderName ()
-                    | _ -> getHeaderFromIndex index
-                let value = getHeaderValue ()
-                ()
+                Field {
+                    Key =                        
+                        match index with 
+                        | 0uy -> Key (getHeaderValue ())
+                        | _ -> Index index
+                    Value = getHeaderValue ()
+                }
 
-            let decodeNeverIndexed () = ()
+            let decodeNeverIndexed () = FieldIndex 0uy
 
-            let decodeWithoutIndexing () = ()
-
-            let affe = (firstByte &&& 0x7Fuy) = 0x7Fuy
+            let decodeWithoutIndexing firstByte = 
+                match firstByte with
+                | 0uy ->
+                    Field {
+                        Key = Key( getHeaderValue ())
+                        Value = getHeaderValue ()
+                    }
+                | _ -> FieldIndex 0uy
 
             match (firstByte &&& 0x40uy) = 0x40uy with // 01000000
             | true -> decodeWithIncrementalIndex ()
             | false when (firstByte &&& 0x10uy) = 0x10uy -> decodeNeverIndexed () // 00010000 
-            | false -> decodeWithoutIndexing ()
+            | false -> decodeWithoutIndexing firstByte
 
         let rec decodeNextHeaderField () = 
-            let firstByte = binaryReader.ReadByte ()
-            if (firstByte &&& 0x80uy) = 0x80uy then // 10000000
-                decodeIndexedHeaderField firstByte
-            else
-                decodeLiteralHeaderField firstByte
+            seq {
+                let firstByte = binaryReader.ReadByte ()
+                let headerField = 
+                    if (firstByte &&& 0x80uy) = 0x80uy then // 10000000
+                        decodeIndexedHeaderField firstByte
+                    else
+                        decodeLiteralHeaderField firstByte
+                if binaryReader.BaseStream.Position = binaryReader.BaseStream.Length then
+                    ()
+                else
+                    yield headerField
+                    yield! decodeNextHeaderField ()
+            }                    
+
+        let result = 
             decodeNextHeaderField ()
-                    
-        decodeNextHeaderField ()
-        ()                
-            //if binaryReader.BaseStream.Length - binaryReader.BaseStream.Position > 0L then
-            //    match state with
-            //    | State.ReadHeaderRepresentation -> 
-            //        let byte = binaryReader.ReadSByte ()
-            //        if requiredMaxDynamicTableSizeChange && (byte &&& 0xe0y) <> 0x20y then 
-            //            failwith "max dynamic table size required"
-            //        else
-            //            match byte with
-            //            | _ when byte < 0y -> 
-            //                headerIndex <- (byte &&& 0x7Fy)
-            //                match headerIndex with 
-            //                | 0y -> failwith (sprintf "Index value %d not allowed" headerIndex)
-            //                | 0x7Fy -> state <- State.ReadIndexedHeader
-            //                | _ -> () // TODO: index header
-            //            | _ when (byte &&& 0x40y) = 0x40y -> 
-            //                indexType <- IndexType.Incremental
-            //                headerIndex <-byte &&& 0x3Fy
-            //                match headerIndex with
-            //                | 0y -> state <- State.ReadLiteralHeaderNameLengthPrefix
-            //                | 0x3Fy -> state <- State.IndexedHeaderName
-            //                | _ -> 
-            //                    setName ()
-            //                    state <- State.ReadLiteralHeaderValueLengthPrefix
-            //            |_ -> ()
-            //    | _ -> failwith "Invalid state"
-            //else
-            //    ()
-
-
+            |> Seq.toArray
+        result
+        
         
 
