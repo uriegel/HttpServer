@@ -28,6 +28,20 @@ type SettingsFlags =
     NotSet = 0x0uy
     | Ack = 0x1uy
 
+type SettingsIdentifier = 
+    /// Changes the maximum size of the header table used for HPACK. Default: 4096
+    HEADER_TABLE_SIZE = 0x1us
+    /// If set to 0 the peer may not send a PUSH_PROMISE frame. Default: 1
+    | ENABLE_PUSH = 0x2us
+    /// Indicates the maximum number of streams that the sender will allow. Default: No limits
+    | MAX_CONCURRENT_STREAMS = 0x3us
+    /// Indicates the sender’s initial window size for flow control. Default: 65353
+    | INITIAL_WINDOW_SIZE = 0x4us
+    /// Indicates the maximum frame size the sender is willing to receive. This value must be between this initial value and 16,777,215 (224-1).Default: 16384
+    | MAX_FRAME_SIZE = 0x5us
+    /// No limit This setting is used to advise a peer of the maximum size of the header the sender is willing to accept. Default: No limits
+    | MAX_HEADER_LIST_SIZE = 0x6us
+    
 type Frame(header: byte[], payload: byte[]) = 
 
     static member SIZE = 9
@@ -44,10 +58,16 @@ type Frame(header: byte[], payload: byte[]) =
 type Settings(header: byte[], payload: byte[]) =
     inherit Frame (header, payload)
 
+    member this.Values = 
+        [0..(payload.Length - 1) / 6]
+        |> Seq.mapi (fun i _ ->
+            let id = BitConverter.ToUInt16 ([| payload.[(i * 6) + 1]; payload.[i * 6] |], 0)
+            let value = BitConverter.ToInt32 ([| payload.[(i * 6) + 5]; payload.[(i * 6) + 4]; payload.[(i * 6) + 3]; payload.[(i * 6) + 2] |], 0)
+            (LanguagePrimitives.EnumOfValue<uint16, SettingsIdentifier> id, value)
+        )
+        |> Map.ofSeq
+    
     member this.Flags  
         with get() = LanguagePrimitives.EnumOfValue<byte, SettingsFlags> this.RawFlags
     
-    //let inline toMap kvps =
-    //kvps
-    //|> Seq.map (|KeyValue|)
-    //|> Map.ofSeq
+    

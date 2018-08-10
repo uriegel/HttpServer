@@ -13,21 +13,23 @@ type Session(networkStream: Stream) =
                 async {
                     let bytes = Array.zeroCreate length
 
-                    let rec asyncRead read = 
+                    let rec asyncRead alreadyRead = 
                         async {
-                            let! read = networkStream.AsyncRead (bytes, read, bytes.Length - read) 
-                            match read with
-                            | 0 -> ()
-                            | _ -> do! asyncRead read
+                            let! read = networkStream.AsyncRead (bytes, alreadyRead, bytes.Length - alreadyRead)  
+                            let total = read + alreadyRead
+                            match total with
+                            | length -> ()
+                            | _ -> do! asyncRead total
                         }
                     do! asyncRead 0
                     return bytes
                 }
             let! header = asyncRead Frame.SIZE
             let length = BitConverter.ToInt32 ([| header.[2]; header.[1]; header.[0]; 0uy |], 0)
+            let! payload = asyncRead length
             let frame = 
                 match LanguagePrimitives.EnumOfValue<byte, FrameType> header.[3] with 
-                | FrameType.SETTINGS -> Settings (header, header)
+                | FrameType.SETTINGS -> Settings (header, payload)
                 | _ -> failwith "Type not supported"
             ()
         }
