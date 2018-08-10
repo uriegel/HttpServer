@@ -1,5 +1,7 @@
 ﻿namespace Http2
 
+open System
+
 type FrameType =
     /// Carries the core content for a stream
     DATA = 0x0uy
@@ -22,7 +24,30 @@ type FrameType =
     /// Used to extend HEADER blocks
     | CONTINUATION = 0x9uy 
 
-type Frame(header: int) = 
+type SettingsFlags =
+    NotSet = 0x0uy
+    | Ack = 0x1uy
+
+type Frame(header: byte[], payload: byte[]) = 
 
     static member SIZE = 9
 
+    member this.Length 
+        with get() = payload.Length
+    member this.Type  
+        with get() = LanguagePrimitives.EnumOfValue<byte, FrameType> header.[3]
+    member this.RawFlags
+        with get() = header.[4]
+    member this.StreamId
+        with get() = BitConverter.ToInt32 ([| header.[8]; header.[7]; header.[6]; (header.[5] &&& ~~~0x1uy) |], 0)
+
+type Settings(header: byte[], payload: byte[]) =
+    inherit Frame (header, payload)
+
+    member this.Flags  
+        with get() = LanguagePrimitives.EnumOfValue<byte, SettingsFlags> this.RawFlags
+    
+    //let inline toMap kvps =
+    //kvps
+    //|> Seq.map (|KeyValue|)
+    //|> Map.ofSeq

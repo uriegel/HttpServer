@@ -25,7 +25,10 @@ type Session(networkStream: Stream) =
                 }
             let! header = asyncRead Frame.SIZE
             let length = BitConverter.ToInt32 ([| header.[2]; header.[1]; header.[0]; 0uy |], 0)
-            let frameType = LanguagePrimitives.EnumOfValue<byte, FrameType> header.[3]
+            let frame = 
+                match LanguagePrimitives.EnumOfValue<byte, FrameType> header.[3] with 
+                | FrameType.SETTINGS -> Settings (header, header)
+                | _ -> failwith "Type not supported"
             ()
         }
 
