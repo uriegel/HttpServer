@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace HttpServer.Http2
+namespace HttpServer.Http22
 {
     class WindowUpdate : Frame
     {

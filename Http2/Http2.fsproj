@@ -5,9 +5,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="Frame.fs" />
     <Compile Include="HuffmanTree.fs" />
     <Compile Include="Huffman.fs" />
     <Compile Include="HPack.fs" />
+    <Compile Include="Session.fs" />
   </ItemGroup>
 
 </Project>

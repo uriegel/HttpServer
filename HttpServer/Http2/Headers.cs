@@ -4,7 +4,7 @@ using System.IO;
 using System.Text;
 using HttpServer.Enums;
 
-namespace HttpServer.Http2
+namespace HttpServer.Http22
 {
     class Headers : Frame
     {

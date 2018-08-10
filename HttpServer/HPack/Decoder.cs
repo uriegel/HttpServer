@@ -7,7 +7,7 @@ namespace HttpServer.HPack
 {
     class Decoder
     {
-        public Decoder(Http2.Headers headers, int maxHeaderTableSize)
+        public Decoder(Http22.Headers headers, int maxHeaderTableSize)
         {
             this.maxHeaderTableSize = maxHeaderTableSize;
             this.headers = headers;
@@ -24,7 +24,7 @@ namespace HttpServer.HPack
         }
 
         readonly BinaryReader headerReader;
-        readonly Http2.Headers headers;
+        readonly Http22.Headers headers;
         readonly int maxHeaderTableSize;
     }
 }

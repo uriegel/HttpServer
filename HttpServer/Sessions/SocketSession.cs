@@ -11,7 +11,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using HttpServer.Exceptions;
-using HttpServer.Http2;
+using HttpServer.Http22;
 
 namespace HttpServer.Sessions
 {
