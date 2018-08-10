@@ -55,8 +55,19 @@ type Frame(header: byte[], payload: byte[]) =
     member this.StreamId
         with get() = BitConverter.ToInt32 ([| header.[8]; header.[7]; header.[6]; (header.[5] &&& ~~~0x1uy) |], 0)
 
+    member this.serialize () =
+        let result = Array.zeroCreate (header.Length + payload.Length)
+        Array.Copy (header, result, header.Length)
+        if payload.Length > 0 then Array.Copy (payload, header.Length, result, 0, payload.Length)
+        result
+
 type Settings(header: byte[], payload: byte[]) =
     inherit Frame (header, payload)
+
+    static member createAck (streamId: int) =
+        let streamIdBytes = BitConverter.GetBytes streamId
+        let header = [| 0uy; 0uy; 0uy; byte FrameType.SETTINGS; byte SettingsFlags.Ack; 0uy; streamIdBytes.[2]; streamIdBytes.[1]; streamIdBytes.[0] |]
+        Settings (header, Array.zeroCreate 0) 
 
     member this.Values = 
         [0..(payload.Length - 1) / 6]
@@ -69,5 +80,6 @@ type Settings(header: byte[], payload: byte[]) =
     
     member this.Flags  
         with get() = LanguagePrimitives.EnumOfValue<byte, SettingsFlags> this.RawFlags
-    
+
+   
     
