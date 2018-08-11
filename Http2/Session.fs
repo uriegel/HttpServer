@@ -85,6 +85,9 @@ type Session(networkStream: Stream) =
                         | None -> failwith "unknown path"
                     | None -> failwith "unknown path"
 
+        let buffer = Huffman.encode "Hallöschen, daß ist falsch!"
+        let zurück = Huffman.decode buffer
+        
         ()
 
     let rec asyncReadNextFrame () = 
@@ -95,7 +98,7 @@ type Session(networkStream: Stream) =
                 let flags = headers.Flags
                 use headerStream = headers.Stream
                 // TODO: Type Decoder in session, set properties like HEADER_TABLE_SIZE
-                let headerFields = HPack.Decode headerStream
+                let headerFields = HPack.decode headerStream
                 processRequest headerFields
                 ()
             | :? Settings as settings -> 

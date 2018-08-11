@@ -28,7 +28,7 @@ module HPack =
 
     type internal IndexType = Incremental = 0 | None = 1| Never = 2
 
-    let Decode (payload: Stream) = 
+    let decode (payload: Stream) = 
         use binaryReader = new BinaryReader (payload)
 
         let getHeaderValue () =
@@ -38,7 +38,7 @@ module HPack =
             let bytes: byte[] = Array.zeroCreate (int length) 
             binaryReader.Read(bytes, 0, bytes.Length) |> ignore
             if huffman then 
-                Huffman.Decode bytes 
+                Huffman.decode bytes 
             else
                 Encoding.UTF8.GetString bytes
 
