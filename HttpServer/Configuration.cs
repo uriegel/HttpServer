@@ -6,11 +6,9 @@ using System.Net;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using HttpServer.Enums;
-using HttpServer.Isapi;
 
 namespace HttpServer
 {
-
     public class Configuration
     {
         #region Properties

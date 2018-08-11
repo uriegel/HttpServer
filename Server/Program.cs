@@ -8,6 +8,16 @@ namespace Server
     {
         static void Main(string[] args)
         {
+            var newCofig = new WebServer.Configuration
+            {
+                Webroot = @"..\..\..\..\..\SuperfitUI\dist\superfitui",
+                // Webroot = @"C:\Program Files\caesar\CAEWebSrv\web",
+                IsTlsEnabled = true,
+                TlsRedirect = true
+            };
+            WebServer.Server.Start(newCofig);
+            WebServer.Server.Stop();
+
             Logger.Current.MinLogLevel = Logger.LogLevel.LowTrace;
             var configuration = new Configuration
             {
