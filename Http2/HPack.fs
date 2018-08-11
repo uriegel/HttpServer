@@ -8,15 +8,16 @@ open System.Text
 module HPack =
 
     type HeaderField = 
-        | FieldIndex of StaticTableIndex
+        | FieldIndex of Index
         | Field of Field
+    and Index =
+        | StaticIndex of StaticTableIndex
+        | DynamicIndex of uint32
+        | Key of string
     and Field = {
-        Key: Key
+        Key: Index
         Value: string
     }
-    and Key = 
-        | Index of StaticTableIndex
-        | Key of string
 
     type internal State = 
         ReadHeaderRepresentation = 0 
@@ -42,7 +43,7 @@ module HPack =
                 Encoding.UTF8.GetString bytes
 
         let decodeIndexedHeaderField firstByte =
-            FieldIndex (LanguagePrimitives.EnumOfValue<byte, StaticTableIndex> (firstByte &&& 0x7Fuy))
+            FieldIndex (StaticIndex (LanguagePrimitives.EnumOfValue<byte, StaticTableIndex> (firstByte &&& 0x7Fuy)))
 
         let decodeLiteralHeaderField firstByte =
             let decodeWithIncrementalIndex () = 
@@ -51,11 +52,11 @@ module HPack =
                     Key =                        
                         match index with 
                         | 0uy -> Key (getHeaderValue ())
-                        | _ -> Index (LanguagePrimitives.EnumOfValue<byte, StaticTableIndex> index)
+                        | _ -> StaticIndex (LanguagePrimitives.EnumOfValue<byte, StaticTableIndex> index)
                     Value = getHeaderValue ()
                 }
 
-            let decodeNeverIndexed () = FieldIndex StaticTableIndex.NeverIndexed
+            let decodeNeverIndexed () = FieldIndex (StaticIndex StaticTableIndex.NeverIndexed)
 
             let decodeWithoutIndexing firstByte = 
                 match firstByte with
@@ -64,7 +65,7 @@ module HPack =
                         Key = Key( getHeaderValue ())
                         Value = getHeaderValue ()
                     }
-                | _ -> FieldIndex StaticTableIndex.NeverIndexed
+                | _ -> FieldIndex (StaticIndex StaticTableIndex.NeverIndexed)
 
             match (firstByte &&& 0x40uy) = 0x40uy with // 01000000
             | true -> decodeWithIncrementalIndex ()

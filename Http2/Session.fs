@@ -4,6 +4,10 @@ open System.IO
 open System.Threading.Tasks
 open System.Diagnostics
 
+type Method = 
+    GET = 0uy
+    | POST = 1uy
+
 type Session(networkStream: Stream) = 
     
     let MAGIC = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n"
@@ -50,8 +54,37 @@ type Session(networkStream: Stream) =
         }
 
     let processRequest (headerFields: HPack.HeaderField[]) = 
-        //match headerFields with
-        //|> _ when headerFields.
+
+        let headers = 
+            headerFields
+            |> Seq.map (fun n ->
+                match n with
+                | HPack.FieldIndex fieldIndex -> (fieldIndex, None)
+                | HPack.Field field -> (field.Key, Some field.Value)
+            )
+            |> Map.ofSeq
+        let method =
+            match headers.TryFind(HPack.StaticIndex StaticTableIndex.MethodGET) with
+            | Some value -> Method.GET
+            | None -> 
+                match headers.TryFind(HPack.StaticIndex StaticTableIndex.MethodPOST) with
+                | Some value -> Method.POST
+                | None -> failwith "unknown method"
+
+        let path = 
+            match headers.TryFind(HPack.StaticIndex StaticTableIndex.PathHome) with
+            | Some value -> "/index.html"
+            | None -> 
+                match headers.TryFind(HPack.StaticIndex StaticTableIndex.PathIndexHtml) with
+                | Some value -> "/index.html"
+                | None -> 
+                    match headers.TryFind(HPack.Key ":path") with
+                    | Some value -> 
+                        match value with 
+                        | Some value -> value
+                        | None -> failwith "unknown path"
+                    | None -> failwith "unknown path"
+
         ()
 
     let rec asyncReadNextFrame () = 
