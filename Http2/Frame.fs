@@ -29,6 +29,10 @@ type SettingsFlags =
     NotSet = 0x0uy
     | Ack = 0x1uy
 
+type PingFlags =
+    NotSet = 0x0uy
+    | Ack = 0x1uy
+
 [<System.FlagsAttribute>]
 type SettingsIdentifier = 
     /// Changes the maximum size of the header table used for HPACK. Default: 4096
@@ -73,7 +77,7 @@ type Frame(header: byte[], payload: byte[]) =
     member this.serialize () =
         let result = Array.zeroCreate (header.Length + payload.Length)
         Array.Copy (header, result, header.Length)
-        if payload.Length > 0 then Array.Copy (payload, header.Length, result, 0, payload.Length)
+        if payload.Length > 0 then Array.Copy (payload, 0, result, header.Length, payload.Length)
         result
 
 type Settings(header: byte[], payload: byte[]) =
@@ -105,21 +109,54 @@ type WindowUpdate(header: byte[], payload: byte[]) =
 type Headers(header: byte[], payload: byte[]) =
     inherit Frame (header, payload)
 
+    let getOffset flags =
+        let mutable offset = 0
+        if flags &&& HeadersFlags.PADDED = HeadersFlags.PADDED then
+            offset <- 1
+        if flags &&& HeadersFlags.PRIORITY = HeadersFlags.PRIORITY then 
+            offset <- offset + 4
+        offset
+
     member this.Flags  
         with get () = LanguagePrimitives.EnumOfValue<byte, HeadersFlags> this.RawFlags
     member this.PadLength 
-        with get () = payload.[0]
+        with get () = 
+            if this.Flags &&& HeadersFlags.PADDED = HeadersFlags.PADDED then 
+                payload.[0]
+            else
+                0uy
     member this.E 
-        with get () = payload.[1] &&& 1uy <> 0uy
+        with get () = 
+            if this.Flags &&& HeadersFlags.PRIORITY = HeadersFlags.PRIORITY then 
+                payload.[1] &&& 1uy <> 0uy
+            else
+                false
     member this.StreamDependency
-        with get () = BitConverter.ToInt32 ([| payload.[4]; payload.[3]; payload.[2]; payload.[1] &&& ~~~1uy |], 0)
+        with get () = 
+            if this.Flags &&& HeadersFlags.PRIORITY = HeadersFlags.PRIORITY then 
+                BitConverter.ToInt32 ([| payload.[4]; payload.[3]; payload.[2]; payload.[1] &&& ~~~1uy |], 0)
+            else
+                0
     member this.Weight
-        with get () = payload.[5]
+        with get () = payload.[getOffset this.Flags]
     member this.Stream  
         with get () =
             let padding = if this.Flags &&& HeadersFlags.PADDED = HeadersFlags.PADDED then this.PadLength else 0uy
-            new MemoryStream (payload, 5, payload.Length - 5 - int padding)
+            new MemoryStream (payload, 1 + getOffset this.Flags, payload.Length - 1 - getOffset this.Flags - int padding)
 
+type RstStream(header: byte[], payload: byte[]) =
+    inherit Frame (header, payload)
 
+    member this.Error
+        with get () = BitConverter.ToInt32 ([| payload.[3]; payload.[2]; payload.[1]; payload.[0] |], 0)
 
- 
+type Ping(header: byte[], payload: byte[]) =
+    inherit Frame (header, payload)
+
+    member this.Flags  
+        with get () = LanguagePrimitives.EnumOfValue<byte, PingFlags> this.RawFlags
+
+    member this.createAck () =
+        header.[4] <- 1uy
+        this
+        

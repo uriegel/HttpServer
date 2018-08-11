@@ -2,6 +2,7 @@
 open System
 open System.IO
 open System.Threading.Tasks
+open System.Diagnostics
 
 type Session(networkStream: Stream) = 
     
@@ -11,6 +12,7 @@ type Session(networkStream: Stream) =
     let HTTP_MAX_HEADER_SIZE = 80 * 1024
 
     let mutable headerTableSize= 0
+    let mutable windowUpdate = 0
 
     let asyncReadFrame () = 
         async {
@@ -36,7 +38,9 @@ type Session(networkStream: Stream) =
                 | FrameType.HEADERS -> Headers (header, payload) :> Frame
                 | FrameType.SETTINGS -> Settings (header, payload) :> Frame
                 | FrameType.WINDOW_UPDATE -> WindowUpdate (header, payload) :> Frame
-                | _ -> failwith "Type not supported"
+                | FrameType.RST_STREAM -> RstStream (header, payload) :> Frame
+                | FrameType.PING -> Ping (header, payload) :> Frame
+                | _ -> failwith (sprintf "type not supported: %A" (LanguagePrimitives.EnumOfValue<byte, FrameType> header.[3]))
         }
 
     let asyncSendFrameAsync (frame: Frame) = 
@@ -44,6 +48,11 @@ type Session(networkStream: Stream) =
             let bytes = frame.serialize ()
             do! networkStream.AsyncWrite (bytes, 0, bytes.Length)
         }
+
+    let processRequest (headerFields: HPack.HeaderField[]) = 
+        //match headerFields with
+        //|> _ when headerFields.
+        ()
 
     let rec asyncReadNextFrame () = 
         async {
@@ -53,7 +62,8 @@ type Session(networkStream: Stream) =
                 let flags = headers.Flags
                 use headerStream = headers.Stream
                 // TODO: Type Decoder in session, set properties like HEADER_TABLE_SIZE
-                let headerFileds = HPack.Decode headerStream
+                let headerFields = HPack.Decode headerStream
+                processRequest headerFields
                 ()
             | :? Settings as settings -> 
                 match settings.Values.TryFind(SettingsIdentifier.HEADER_TABLE_SIZE) with 
@@ -61,10 +71,14 @@ type Session(networkStream: Stream) =
                 | None -> ()
                 let ack = Settings.createAck settings.StreamId
                 do! asyncSendFrameAsync ack
-            | :? WindowUpdate as windowUpdate -> 
-                let w = windowUpdate.SizeIncrement
+            | :? WindowUpdate as windowUpdateFrame -> 
+                windowUpdate <- windowUpdate + windowUpdateFrame.SizeIncrement
+            | :? RstStream as rstStream -> 
+                let error = rstStream.Error
                 ()
-            | _ -> failwith "type not supported"
+            | :? Ping as ping -> 
+                do! asyncSendFrameAsync <| ping.createAck ()
+            | _ -> failwith (sprintf "type not supported: %A" frame.Type)
             do! asyncReadNextFrame ()
         } 
 
