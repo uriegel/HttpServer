@@ -8,13 +8,6 @@ namespace Server
     {
         static void Main(string[] args)
         {
-            using (var strom = File.OpenRead(@"..\..\..\header.txt"))
-            {
-                var bytes = new byte[strom.Length];
-                strom.Read(bytes, 0, bytes.Length);
-                var result = Http2.HPack.Decode(new MemoryStream(bytes));
-            }
-
             Logger.Current.MinLogLevel = Logger.LogLevel.LowTrace;
             var configuration = new Configuration
             {

@@ -118,7 +118,7 @@ type Headers(header: byte[], payload: byte[]) =
     member this.Stream  
         with get () =
             let padding = if this.Flags &&& HeadersFlags.PADDED = HeadersFlags.PADDED then this.PadLength else 0uy
-            new MemoryStream (payload, 6, payload.Length - 6 - int padding)
+            new MemoryStream (payload, 5, payload.Length - 5 - int padding)
 
 
 

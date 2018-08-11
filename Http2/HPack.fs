@@ -79,10 +79,8 @@ module HPack =
                         decodeIndexedHeaderField firstByte
                     else
                         decodeLiteralHeaderField firstByte
-                if binaryReader.BaseStream.Position = binaryReader.BaseStream.Length then
-                    ()
-                else
-                    yield headerField
+                yield headerField
+                if binaryReader.BaseStream.Position < binaryReader.BaseStream.Length then
                     yield! decodeNextHeaderField ()
             }                    
 
