@@ -1,6 +1,7 @@
 ﻿namespace Http2
 
 open System
+open System.IO
 
 type FrameType =
     /// Carries the core content for a stream
@@ -28,6 +29,7 @@ type SettingsFlags =
     NotSet = 0x0uy
     | Ack = 0x1uy
 
+[<System.FlagsAttribute>]
 type SettingsIdentifier = 
     /// Changes the maximum size of the header table used for HPACK. Default: 4096
     HEADER_TABLE_SIZE = 0x1us
@@ -42,18 +44,31 @@ type SettingsIdentifier =
     /// No limit This setting is used to advise a peer of the maximum size of the header the sender is willing to accept. Default: No limits
     | MAX_HEADER_LIST_SIZE = 0x6us
     
+[<System.FlagsAttribute>]
+type HeadersFlags =
+    NotSet = 0x0uy
+    /// Indicates this is the frame in the stream.
+    | END_STREAM = 0x1uy
+    /// Indicates this is the last HEADERS frame in the stream. If this is flag not set it implies a CONTINUATION frame is next.
+    | END_HEADERS = 0x4uy
+    /// Indicates that the Pad Length and Padding fields are used.
+    | PADDED = 0x8uy
+    /// When set it indicates that the E, Stream Dependency, and weight fields are used.
+    | PRIORITY = 0x20uy
+
+
 type Frame(header: byte[], payload: byte[]) = 
 
     static member SIZE = 9
 
     member this.Length 
-        with get() = payload.Length
+        with get () = payload.Length
     member this.Type  
-        with get() = LanguagePrimitives.EnumOfValue<byte, FrameType> header.[3]
+        with get () = LanguagePrimitives.EnumOfValue<byte, FrameType> header.[3]
     member this.RawFlags
-        with get() = header.[4]
+        with get () = header.[4]
     member this.StreamId
-        with get() = BitConverter.ToInt32 ([| header.[8]; header.[7]; header.[6]; (header.[5] &&& ~~~0x1uy) |], 0)
+        with get () = BitConverter.ToInt32 ([| header.[8]; header.[7]; header.[6]; (header.[5] &&& ~~~0x1uy) |], 0)
 
     member this.serialize () =
         let result = Array.zeroCreate (header.Length + payload.Length)
@@ -79,7 +94,32 @@ type Settings(header: byte[], payload: byte[]) =
         |> Map.ofSeq
     
     member this.Flags  
-        with get() = LanguagePrimitives.EnumOfValue<byte, SettingsFlags> this.RawFlags
+        with get () = LanguagePrimitives.EnumOfValue<byte, SettingsFlags> this.RawFlags
 
-   
+type WindowUpdate(header: byte[], payload: byte[]) =
+    inherit Frame (header, payload)
+
+    member this.SizeIncrement
+        with get () = BitConverter.ToInt32 ([| payload.[3]; payload.[2]; payload.[1]; payload.[0] &&& ~~~1uy |], 0)
     
+type Headers(header: byte[], payload: byte[]) =
+    inherit Frame (header, payload)
+
+    member this.Flags  
+        with get () = LanguagePrimitives.EnumOfValue<byte, HeadersFlags> this.RawFlags
+    member this.PadLength 
+        with get () = payload.[0]
+    member this.E 
+        with get () = payload.[1] &&& 1uy <> 0uy
+    member this.StreamDependency
+        with get () = BitConverter.ToInt32 ([| payload.[4]; payload.[3]; payload.[2]; payload.[1] &&& ~~~1uy |], 0)
+    member this.Weight
+        with get () = payload.[5]
+    member this.Stream  
+        with get () =
+            let padding = if this.Flags &&& HeadersFlags.PADDED = HeadersFlags.PADDED then this.PadLength else 0uy
+            new MemoryStream (payload, 6, payload.Length - 6 - int padding)
+
+
+
+ 
