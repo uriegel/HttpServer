@@ -8,14 +8,14 @@ open System.Text
 module HPack =
 
     type HeaderField = 
-        | FieldIndex of byte
+        | FieldIndex of StaticTableIndex
         | Field of Field
     and Field = {
         Key: Key
         Value: string
     }
     and Key = 
-        | Index of byte
+        | Index of StaticTableIndex
         | Key of string
 
     type internal State = 
@@ -42,7 +42,7 @@ module HPack =
                 Encoding.UTF8.GetString bytes
 
         let decodeIndexedHeaderField firstByte =
-            FieldIndex (firstByte &&& 0x7Fuy)
+            FieldIndex (LanguagePrimitives.EnumOfValue<byte, StaticTableIndex> (firstByte &&& 0x7Fuy))
 
         let decodeLiteralHeaderField firstByte =
             let decodeWithIncrementalIndex () = 
@@ -51,11 +51,11 @@ module HPack =
                     Key =                        
                         match index with 
                         | 0uy -> Key (getHeaderValue ())
-                        | _ -> Index index
+                        | _ -> Index (LanguagePrimitives.EnumOfValue<byte, StaticTableIndex> index)
                     Value = getHeaderValue ()
                 }
 
-            let decodeNeverIndexed () = FieldIndex 0uy
+            let decodeNeverIndexed () = FieldIndex StaticTableIndex.NeverIndexed
 
             let decodeWithoutIndexing firstByte = 
                 match firstByte with
@@ -64,7 +64,7 @@ module HPack =
                         Key = Key( getHeaderValue ())
                         Value = getHeaderValue ()
                     }
-                | _ -> FieldIndex 0uy
+                | _ -> FieldIndex StaticTableIndex.NeverIndexed
 
             match (firstByte &&& 0x40uy) = 0x40uy with // 01000000
             | true -> decodeWithIncrementalIndex ()
