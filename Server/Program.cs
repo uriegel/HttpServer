@@ -8,7 +8,7 @@ namespace Server
     {
         static void Main(string[] args)
         {
-            var newCofig = new WebServer.Configuration
+            var newCofig = new WebServer.InitializationData
             {
                 Webroot = @"..\..\..\..\..\SuperfitUI\dist\superfitui",
                 // Webroot = @"C:\Program Files\caesar\CAEWebSrv\web",
