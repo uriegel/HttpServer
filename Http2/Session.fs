@@ -3,6 +3,7 @@ open System
 open System.IO
 open System.Threading.Tasks
 open System.Diagnostics
+open System.Text
 
 type Method = 
     GET = 0uy
@@ -53,68 +54,120 @@ type Session(networkStream: Stream) =
             do! networkStream.AsyncWrite (bytes, 0, bytes.Length)
         }
 
-    let processRequest (headerFields: HPack.HeaderField[]) = 
+    let asyncSendError streamId (htmlHead: string) (htmlBody: string) errorCode (errorText: string) =
+        async {
+            let response = sprintf "<html><head>%s</head><body>%s</body></html>" htmlHead htmlBody
+            let responseBytes = Encoding.UTF8.GetBytes response
+            // TODO: Deflate or GZip
+            let contentLength = responseBytes.Length
+            let headerFields = [ 
+                HPack.FieldIndex (HPack.StaticIndex StaticTableIndex.Status404)
+                HPack.Field { Key = (HPack.StaticIndex StaticTableIndex.ContentType); Value = "text/html; charset=UTF-8"} 
+                HPack.Field { Key = (HPack.StaticIndex StaticTableIndex.ContentLength); Value = string contentLength} 
+                HPack.Field { Key = (HPack.StaticIndex StaticTableIndex.Date); Value = (DateTime.Now.ToUniversalTime ()).ToString("R")} 
+                HPack.Field { Key = (HPack.StaticIndex StaticTableIndex.Server); Value = "Uriegel Web Server"} 
+            ]   
 
-        let headers = 
-            headerFields
-            |> Seq.map (fun n ->
-                match n with
-                | HPack.FieldIndex fieldIndex -> (fieldIndex, None)
-                | HPack.Field field -> (field.Key, Some field.Value)
-            )
-            |> Map.ofSeq
-        let method =
-            match headers.TryFind(HPack.StaticIndex StaticTableIndex.MethodGET) with
-            | Some value -> Method.GET
-            | None -> 
-                match headers.TryFind(HPack.StaticIndex StaticTableIndex.MethodPOST) with
-                | Some value -> Method.POST
-                | None -> failwith "unknown method"
+        
+            let encodedHeaderFields = HPack.encode headerFields
+            let receiveHeaders = Headers.create streamId encodedHeaderFields true
 
-        let path = 
-            match headers.TryFind(HPack.StaticIndex StaticTableIndex.PathHome) with
-            | Some value -> "/index.html"
-            | None -> 
-                match headers.TryFind(HPack.StaticIndex StaticTableIndex.PathIndexHtml) with
+            let bytes = receiveHeaders.serialize ()
+            do! networkStream.AsyncWrite (bytes, 0, bytes.Length)
+
+            let headerFields = HPack.decode receiveHeaders.Stream
+
+            let bytes = Array.zeroCreate (contentLength + 9)
+            let lengthBytes = BitConverter.GetBytes contentLength
+            let streamIdBytes = BitConverter.GetBytes streamId
+            bytes.[0] <- lengthBytes.[2]
+            bytes.[1] <- lengthBytes.[1]
+            bytes.[2] <- lengthBytes.[0]
+            bytes.[3] <- byte FrameType.DATA
+            bytes.[4] <- 1uy
+            bytes.[5] <- streamIdBytes.[3] &&& ~~~1uy
+            bytes.[6] <- streamIdBytes.[2]
+            bytes.[7] <- streamIdBytes.[1]
+            bytes.[8] <- streamIdBytes.[0]
+            System.Array.Copy(bytes, 9, responseBytes, 0, responseBytes.Length)
+            do! networkStream.AsyncWrite (bytes, 0, bytes.Length)
+        }
+    
+    let asyncSendNotFound streamId =
+        async {
+            // Logger.Current.LowTrace(() => $"{Id} 404 Not Found");
+            do! asyncSendError streamId @"<title>URIEGEL</title>
+<Style> 
+html {
+    font-family: sans-serif;
+}
+h1 {
+    font-weight: 100;
+}
+</Style>" 
+                    "<h1>Datei nicht gefunden</h1><p>Die angegebene Resource konnte auf dem Server nicht gefunden werden.</p>" 404 ""
+        }
+
+    let asyncProcessRequest streamId (headerFields: HPack.HeaderField[]) = 
+        async {
+            let headers = 
+                headerFields
+                |> Seq.map (fun n ->
+                    match n with
+                    | HPack.FieldIndex fieldIndex -> (fieldIndex, None)
+                    | HPack.Field field -> (field.Key, Some field.Value)
+                )
+                |> Map.ofSeq
+            let method =
+                match headers.TryFind(HPack.StaticIndex StaticTableIndex.MethodGET) with
+                | Some value -> Method.GET
+                | None -> 
+                    match headers.TryFind(HPack.StaticIndex StaticTableIndex.MethodPOST) with
+                    | Some value -> Method.POST
+                    | None -> failwith "unknown method"
+
+            let path = 
+                match headers.TryFind(HPack.StaticIndex StaticTableIndex.PathHome) with
                 | Some value -> "/index.html"
                 | None -> 
-                    match headers.TryFind(HPack.Key ":path") with
-                    | Some value -> 
-                        match value with 
-                        | Some value -> value
+                    match headers.TryFind(HPack.StaticIndex StaticTableIndex.PathIndexHtml) with
+                    | Some value -> "/index.html"
+                    | None -> 
+                        match headers.TryFind(HPack.Key ":path") with
+                        | Some value -> 
+                            match value with 
+                            | Some value -> value
+                            | None -> failwith "unknown path"
                         | None -> failwith "unknown path"
-                    | None -> failwith "unknown path"
 
-        //let headerFields = [ 
-        //    HPack.FieldIndex (HPack.StaticIndex StaticTableIndex.MethodGET)
-        //    HPack.Field { Key = (HPack.StaticIndex StaticTableIndex.Authority); Value = "cas-ew-caesar-3.ub2.cae.local:8080"} // TODO: very long string > 256 chars
-        //    HPack.Field { Key = (HPack.Key "upgrade-insecure-requests"); Value = "1"} // TODO: very long string > 256 chars
-        //    HPack.FieldIndex (HPack.StaticIndex StaticTableIndex.MethodPOST)
-        //]
+            //let headerFields = [ 
+            //    HPack.FieldIndex (HPack.StaticIndex StaticTableIndex.MethodGET)
+            //    HPack.Field { Key = (HPack.StaticIndex StaticTableIndex.Authority); Value = "cas-ew-caesar-3.ub2.cae.local:8080"} // TODO: very long string > 256 chars
+            //    HPack.Field { Key = (HPack.Key "upgrade-insecure-requests"); Value = "1"} // TODO: very long string > 256 chars
+            //    HPack.FieldIndex (HPack.StaticIndex StaticTableIndex.MethodPOST)
+            //]
 
-        let headerFields = [ 
-            HPack.FieldIndex (HPack.StaticIndex StaticTableIndex.Status404)
-            HPack.Field { Key = (HPack.StaticIndex StaticTableIndex.ContentType); Value = "text/html; charset=UTF-8"} 
-            HPack.Field { Key = (HPack.StaticIndex StaticTableIndex.ContentLength); Value = "1258"} 
-            HPack.Field { Key = (HPack.StaticIndex StaticTableIndex.Date); Value = (DateTime.Now.ToUniversalTime ()).ToString("R")} 
-            HPack.Field { Key = (HPack.StaticIndex StaticTableIndex.Server); Value = "Uriegel Web Server"} 
-        ]
+            let headerFields = [ 
+                HPack.FieldIndex (HPack.StaticIndex StaticTableIndex.Status404)
+                HPack.Field { Key = (HPack.StaticIndex StaticTableIndex.ContentType); Value = "text/html; charset=UTF-8"} 
+                HPack.Field { Key = (HPack.StaticIndex StaticTableIndex.ContentLength); Value = "1258"} 
+                HPack.Field { Key = (HPack.StaticIndex StaticTableIndex.Date); Value = (DateTime.Now.ToUniversalTime ()).ToString("R")} 
+                HPack.Field { Key = (HPack.StaticIndex StaticTableIndex.Server); Value = "Uriegel Web Server"} 
+            ]
 
-        //let headerFields = [  ]
-        let testDecoded = HPack.encode headerFields
+            //let headerFields = [  ]
+            let testDecoded = HPack.encode headerFields
 
-        let stream = new MemoryStream (testDecoded)
+            let stream = new MemoryStream (testDecoded)
 
-        let test = HPack.decode stream
+            let test = HPack.decode stream
         
-
+            do! asyncSendNotFound streamId 
+        }
+        
         // TODO: SendNotFound -> sendHeader, send Frame
         // TODO Then change 404 to 200
         // TODO next request will use indexes from the dynamic table
-
-
-
-        ()
 
     let rec asyncReadNextFrame () = 
         async {
@@ -125,7 +178,7 @@ type Session(networkStream: Stream) =
                 use headerStream = headers.Stream
                 // TODO: Type Decoder in session, set properties like HEADER_TABLE_SIZE
                 let headerFields = HPack.decode headerStream
-                processRequest headerFields
+                do! asyncProcessRequest headers.StreamId headerFields
                 ()
             | :? Settings as settings -> 
                 match settings.Values.TryFind(SettingsIdentifier.HEADER_TABLE_SIZE) with 

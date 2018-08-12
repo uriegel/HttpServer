@@ -84,7 +84,7 @@ type Settings(header: byte[], payload: byte[]) =
 
     static member createAck (streamId: int) =
         let streamIdBytes = BitConverter.GetBytes streamId
-        let header = [| 0uy; 0uy; 0uy; byte FrameType.SETTINGS; byte SettingsFlags.Ack; 0uy; streamIdBytes.[2]; streamIdBytes.[1]; streamIdBytes.[0] |]
+        let header = [| 0uy; 0uy; 0uy; byte FrameType.SETTINGS; byte SettingsFlags.Ack; streamIdBytes.[3] &&& ~~~1uy; streamIdBytes.[2]; streamIdBytes.[1]; streamIdBytes.[0] |]
         Settings (header, Array.zeroCreate 0) 
 
     member this.Values = 
@@ -140,6 +140,17 @@ type Headers(header: byte[], payload: byte[]) =
         with get () =
             let padding = if this.Flags &&& HeadersFlags.PADDED = HeadersFlags.PADDED then this.PadLength else 0uy
             new MemoryStream (payload, 1 + getOffset this.Flags, payload.Length - 1 - getOffset this.Flags - int padding)
+
+    static member create (streamId: int) (encodedHeaderFields: byte[]) (endFrame: bool) = 
+        let payload = Array.zeroCreate (encodedHeaderFields.Length + 1)
+        let bytes = BitConverter.GetBytes payload.Length
+        let streamIdBytes = BitConverter.GetBytes streamId
+        let headers = [| bytes.[2]; bytes.[1]; bytes.[0]; 
+            byte FrameType.HEADERS; byte HeadersFlags.END_HEADERS;
+            streamIdBytes.[3] &&& ~~~1uy; streamIdBytes.[2]; streamIdBytes.[1]; streamIdBytes.[0] 
+        |]
+        System.Array.Copy(encodedHeaderFields, 0, payload, 1, payload.Length - 1)
+        Headers (headers, payload)
 
 type RstStream(header: byte[], payload: byte[]) =
     inherit Frame (header, payload)
