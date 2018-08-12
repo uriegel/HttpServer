@@ -85,13 +85,21 @@ type Session(networkStream: Stream) =
                         | None -> failwith "unknown path"
                     | None -> failwith "unknown path"
 
+        //let headerFields = [ 
+        //    HPack.FieldIndex (HPack.StaticIndex StaticTableIndex.MethodGET)
+        //    HPack.Field { Key = (HPack.StaticIndex StaticTableIndex.Authority); Value = "cas-ew-caesar-3.ub2.cae.local:8080"} // TODO: very long string > 256 chars
+        //    HPack.Field { Key = (HPack.Key "upgrade-insecure-requests"); Value = "1"} // TODO: very long string > 256 chars
+        //    HPack.FieldIndex (HPack.StaticIndex StaticTableIndex.MethodPOST)
+        //]
+
         let headerFields = [ 
-            HPack.FieldIndex (HPack.StaticIndex StaticTableIndex.MethodGET)
-            HPack.Field { Key = (HPack.StaticIndex StaticTableIndex.Authority); Value = "cas-ew-caesar-3.ub2.cae.local:8080"} // TODO: very long string > 256 chars
-            HPack.Field { Key = (HPack.Key "upgrade-insecure-requests"); Value = "1"} // TODO: very long string > 256 chars
-            HPack.FieldIndex (HPack.StaticIndex StaticTableIndex.MethodPOST)
-            
+            HPack.FieldIndex (HPack.StaticIndex StaticTableIndex.Status404)
+            HPack.Field { Key = (HPack.StaticIndex StaticTableIndex.ContentType); Value = "text/html; charset=UTF-8"} 
+            HPack.Field { Key = (HPack.StaticIndex StaticTableIndex.ContentLength); Value = "1258"} 
+            HPack.Field { Key = (HPack.StaticIndex StaticTableIndex.Date); Value = (DateTime.Now.ToUniversalTime ()).ToString("R")} 
+            HPack.Field { Key = (HPack.StaticIndex StaticTableIndex.Server); Value = "Uriegel Web Server"} 
         ]
+
         //let headerFields = [  ]
         let testDecoded = HPack.encode headerFields
 
@@ -99,6 +107,11 @@ type Session(networkStream: Stream) =
 
         let test = HPack.decode stream
         
+
+        // TODO: SendNotFound -> sendHeader, send Frame
+
+
+
         ()
 
     let rec asyncReadNextFrame () = 
