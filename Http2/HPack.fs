@@ -105,14 +105,24 @@ module HPack =
             let byte = index ||| 0x80uy // 10000000
             binaryWriter.Write byte
 
-        let encodeStaticIncremental index text = 
-            let byt = index ||| 0x40uy // 01000000
-            binaryWriter.Write byt
+        let encodeValue text = 
             let len = getEncodedLength text
             let maskedLen = byte len ||| 0x80uy // 10000000 
             binaryWriter.Write maskedLen
             let encodedValue = Huffman.encode text
             binaryWriter.Write encodedValue
+
+
+        let encodeStaticIncremental index text = 
+            let byt = index ||| 0x40uy // 01000000
+            binaryWriter.Write byt
+            encodeValue text
+
+        let encodeIncremental key value = 
+            let byt = 0x40uy // 01000000
+            binaryWriter.Write byt
+            encodeValue key
+            encodeValue value
 
         let encodeHeaderField headerField =
             match headerField with 
@@ -125,7 +135,7 @@ module HPack =
                 match field.Key with
                 | StaticIndex key -> encodeStaticIncremental (byte key) (Encoding.UTF8.GetBytes field.Value)
                 | DynamicIndex key -> ()
-                | Key key -> ()
+                | Key key -> encodeIncremental (Encoding.UTF8.GetBytes key) (Encoding.UTF8.GetBytes field.Value)
                 
                 ()
 

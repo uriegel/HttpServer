@@ -87,8 +87,10 @@ type Session(networkStream: Stream) =
 
         let headerFields = [ 
             HPack.FieldIndex (HPack.StaticIndex StaticTableIndex.MethodGET)
-            HPack.Field { Key = (HPack.StaticIndex StaticTableIndex.Authority); Value = "cas-ew-caesar-3.ub2.cae.local:8080"}
+            HPack.Field { Key = (HPack.StaticIndex StaticTableIndex.Authority); Value = "cas-ew-caesar-3.ub2.cae.local:8080"} // TODO: very long string > 256 chars
+            HPack.Field { Key = (HPack.Key "upgrade-insecure-requests"); Value = "1"} // TODO: very long string > 256 chars
             HPack.FieldIndex (HPack.StaticIndex StaticTableIndex.MethodPOST)
+            
         ]
         //let headerFields = [  ]
         let testDecoded = HPack.encode headerFields
