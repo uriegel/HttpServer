@@ -5,6 +5,7 @@ open System.IO
 open System.Net
 open System.Security.Cryptography.X509Certificates
 open System.Security.Authentication
+open System.Threading
 
 type TlsProtocol =
     Tls10 = 0
@@ -41,6 +42,15 @@ type InitializationData() =
             | _ -> SslProtocols.Tls ||| SslProtocols.Tls11 ||| SslProtocols.Tls12
 
 module Server =
+   
+    let internal initialize () = 
+        ServicePointManager.DefaultConnectionLimit <- 1000 
+        ServicePointManager.SecurityProtocol <- SecurityProtocolType.Tls12 ||| SecurityProtocolType.Tls11 ||| SecurityProtocolType.Tls 
+        ThreadPool.SetMinThreads (1000, 1000) |> ignore
+        true
+    
+    let isInitialized = initialize ()
+
     let private toSettings (configuration: InitializationData) = {
         LocalAddress = configuration.LocalAddress
         Webroot = configuration.Webroot
@@ -63,6 +73,7 @@ module Server =
     }
     
     let Start (configuration: InitializationData) = 
+        let isInitialized = isInitialized
         Settings.Initialize (toSettings configuration)
         Logger.Info "Starting Web Server"
         
