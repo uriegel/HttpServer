@@ -60,7 +60,6 @@ type HeadersFlags =
     /// When set it indicates that the E, Stream Dependency, and weight fields are used.
     | PRIORITY = 0x20uy
 
-
 type Frame(header: byte[], payload: byte[]) = 
 
     static member SIZE = 9
@@ -121,22 +120,20 @@ type Headers(header: byte[], payload: byte[]) =
         with get () = LanguagePrimitives.EnumOfValue<byte, HeadersFlags> this.RawFlags
     member this.PadLength 
         with get () = 
-            if this.Flags &&& HeadersFlags.PADDED = HeadersFlags.PADDED then 
-                payload.[0]
-            else
-                0uy
+            match this.Flags with
+            | _ when this.Flags &&& HeadersFlags.PADDED = HeadersFlags.PADDED -> payload.[0]
+            | _ -> 0uy
     member this.E 
         with get () = 
-            if this.Flags &&& HeadersFlags.PRIORITY = HeadersFlags.PRIORITY then 
-                payload.[1] &&& 1uy <> 0uy
-            else
-                false
+            match this.Flags with
+            | _ when this.Flags &&& HeadersFlags.PRIORITY = HeadersFlags.PRIORITY -> payload.[1] &&& 1uy <> 0uy
+            | _ -> false
     member this.StreamDependency
         with get () = 
-            if this.Flags &&& HeadersFlags.PRIORITY = HeadersFlags.PRIORITY then 
+            match this.Flags with
+            | _ when this.Flags &&& HeadersFlags.PRIORITY = HeadersFlags.PRIORITY ->
                 BitConverter.ToInt32 ([| payload.[4]; payload.[3]; payload.[2]; payload.[1] &&& ~~~1uy |], 0)
-            else
-                0
+            |_ -> 0
     member this.Weight
         with get () = payload.[getOffset this.Flags]
     member this.Stream  

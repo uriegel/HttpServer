@@ -266,7 +266,7 @@ module internal HuffmanTree =
             0x3fffffff
         |]
         
-    let private lengths = 
+    let internal lengths = 
         [| 
             13
             23

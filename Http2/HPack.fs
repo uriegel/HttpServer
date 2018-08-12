@@ -85,10 +85,54 @@ module HPack =
                     yield! decodeNextHeaderField ()
             }                    
 
-        let result = 
-            decodeNextHeaderField ()
-            |> Seq.toArray
-        result
+        decodeNextHeaderField ()
+        |> Seq.toArray
         
+    let encode (headerFields: HeaderField list) =
+        use memoryStream = new MemoryStream ()
+        use binaryWriter = new BinaryWriter (memoryStream)
+
+        let getEncodedLength (text: byte[]) = 
+            let rec getEncodedLength index = 
+                match index with
+                | _ when index = text.Length -> 0
+                | _  -> HuffmanTree.lengths.[int (text.[index] &&& 0xFFuy)] + getEncodedLength (index + 1)
+
+            let length = getEncodedLength 0
+            (length + 7) >>> 3
+
+        let encodeStaticIndex index = 
+            let byte = index ||| 0x80uy // 10000000
+            binaryWriter.Write byte
+
+        let encodeStaticIncremental index text = 
+            let byt = index ||| 0x40uy // 01000000
+            binaryWriter.Write byt
+            let len = getEncodedLength text
+            let maskedLen = byte len ||| 0x80uy // 10000000 
+            binaryWriter.Write maskedLen
+            let encodedValue = Huffman.encode text
+            binaryWriter.Write encodedValue
+
+        let encodeHeaderField headerField =
+            match headerField with 
+            | FieldIndex index ->
+                match index with
+                | StaticIndex key -> encodeStaticIndex (byte key)
+                | DynamicIndex key -> ()
+                | Key key -> ()
+            | Field field -> 
+                match field.Key with
+                | StaticIndex key -> encodeStaticIncremental (byte key) (Encoding.UTF8.GetBytes field.Value)
+                | DynamicIndex key -> ()
+                | Key key -> ()
+                
+                ()
+
+        headerFields    
+        |> List.iter (fun n -> encodeHeaderField n)
+        binaryWriter.Flush ()
+        memoryStream.Capacity <- int memoryStream.Length
+        memoryStream.GetBuffer ()
         
 

@@ -85,8 +85,17 @@ type Session(networkStream: Stream) =
                         | None -> failwith "unknown path"
                     | None -> failwith "unknown path"
 
-        let buffer = Huffman.encode "Hallöschen, daß ist falsch!"
-        let zurück = Huffman.decode buffer
+        let headerFields = [ 
+            HPack.FieldIndex (HPack.StaticIndex StaticTableIndex.MethodGET)
+            HPack.Field { Key = (HPack.StaticIndex StaticTableIndex.Authority); Value = "cas-ew-caesar-3.ub2.cae.local:8080"}
+            HPack.FieldIndex (HPack.StaticIndex StaticTableIndex.MethodPOST)
+        ]
+        //let headerFields = [  ]
+        let testDecoded = HPack.encode headerFields
+
+        let stream = new MemoryStream (testDecoded)
+
+        let test = HPack.decode stream
         
         ()
 

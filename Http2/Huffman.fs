@@ -12,8 +12,7 @@ module Huffman =
         let oneByte = [| byte |]
         stream.Write(oneByte, 0, 1)
 
-    let encode (text: string) = 
-        let bytesToEncode = Encoding.UTF8.GetBytes text
+    let encode (bytesToEncode: byte[]) = 
         use resultStream = new MemoryStream (bytesToEncode.Length)
         use resultWriter = new BinaryWriter (resultStream)
 
