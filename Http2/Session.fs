@@ -109,6 +109,8 @@ type Session(networkStream: Stream) =
         
 
         // TODO: SendNotFound -> sendHeader, send Frame
+        // TODO Then change 404 to 200
+        // TODO next request will use indexes from the dynamic table
 
 
 
