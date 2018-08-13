@@ -13,6 +13,7 @@ namespace Server
                 Webroot = @"..\..\..\..\..\SuperfitUI\dist\superfitui",
                 // Webroot = @"C:\Program Files\caesar\CAEWebSrv\web",
                 IsTlsEnabled = true,
+                DomainName = "riegel.selfhost.eu",
                 TlsRedirect = true
             };
             WebServer.Server.Start(newCofig);
