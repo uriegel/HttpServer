@@ -142,14 +142,16 @@ type Headers(header: byte[], payload: byte[]) =
             new MemoryStream (payload, 1 + getOffset this.Flags, payload.Length - 1 - getOffset this.Flags - int padding)
 
     static member create (streamId: int) (encodedHeaderFields: byte[]) (endFrame: bool) = 
-        let payload = Array.zeroCreate (encodedHeaderFields.Length + 1)
+        //let payload = Array.zeroCreate (encodedHeaderFields.Length + 1)
+        let payload = Array.zeroCreate (encodedHeaderFields.Length)
         let bytes = BitConverter.GetBytes payload.Length
         let streamIdBytes = BitConverter.GetBytes streamId
         let headers = [| bytes.[2]; bytes.[1]; bytes.[0]; 
             byte FrameType.HEADERS; byte HeadersFlags.END_HEADERS;
             streamIdBytes.[3] &&& ~~~1uy; streamIdBytes.[2]; streamIdBytes.[1]; streamIdBytes.[0] 
         |]
-        System.Array.Copy(encodedHeaderFields, 0, payload, 1, payload.Length - 1)
+        //System.Array.Copy(encodedHeaderFields, 0, payload, 1, payload.Length - 1)
+        System.Array.Copy(encodedHeaderFields, payload, payload.Length)
         Headers (headers, payload)
 
 type RstStream(header: byte[], payload: byte[]) =

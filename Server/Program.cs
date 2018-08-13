@@ -18,6 +18,8 @@ namespace Server
             WebServer.Server.Start(newCofig);
             WebServer.Server.Stop();
 
+            Console.ReadLine();
+
             Logger.Current.MinLogLevel = Logger.LogLevel.LowTrace;
             var configuration = new Configuration
             {

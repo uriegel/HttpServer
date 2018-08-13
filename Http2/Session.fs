@@ -89,7 +89,7 @@ type Session(networkStream: Stream) =
             bytes.[6] <- streamIdBytes.[2]
             bytes.[7] <- streamIdBytes.[1]
             bytes.[8] <- streamIdBytes.[0]
-            System.Array.Copy(bytes, 9, responseBytes, 0, responseBytes.Length)
+            System.Array.Copy(responseBytes, 0, bytes, 9, responseBytes.Length)
             do! networkStream.AsyncWrite (bytes, 0, bytes.Length)
         }
     
@@ -172,6 +172,8 @@ h1 {
     let rec asyncReadNextFrame () = 
         async {
             let! frame = asyncReadFrame ()
+
+            printfn "Fram: %A" frame.Type
             match frame with 
             | :? Headers as headers -> 
                 let flags = headers.Flags

@@ -78,7 +78,6 @@ module Server =
         Logger.Info "Starting Web Server"
         
         Logger.Info "Web Server started"
-        ()
 
     let Stop () =
         ()
