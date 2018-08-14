@@ -53,6 +53,41 @@ module Server =
         sprintf "http%s://%s%s" (if Settings.Current.IsTlsEnabled then "s" else "") Settings.Current.DomainName (getPort ())
     
     let Start (configuration: InitializationData) = 
+        let getCertificate () = 
+            match configuration.IsTlsEnabled with
+            | true ->
+                match configuration.Certificate with
+                | null ->
+                    use store = new X509Store (StoreLocation.LocalMachine)
+                    store.Open OpenFlags.ReadOnly
+                    let certificate = 
+                        store.Certificates
+                        |> Seq.cast<X509Certificate2>
+                        |> Seq.filter (fun n -> n.FriendlyName = configuration.CertificateName)
+                        |> Seq.tryItem 0
+                    match certificate with
+                    | Some value -> Some value
+                    | None ->
+                        let certificateFile = @"c:\users\urieg\desktop\Riegel.selfhost.eu.pfx"
+                        //var certificateFile = @"d:\test\Riegel.selfhost.eu.pfx";
+                        //var certificateFile = @"d:\test\zert.pfx";
+                        //var certificateFile = @"d:\test\zertOhneAntragsteller.pfx";
+
+                        //var certificateFile = @"D:\OpenSSL\bin\affe\key.pem";
+                        let beits = Array.zeroCreate (int (FileInfo certificateFile).Length)
+                        use file = File.OpenRead certificateFile
+                        file.Read (beits, 0, beits.Length) |> ignore
+                        Some (new X509Certificate2 (beits, "caesar"))
+                        //var userName = System.Security.Principal.WindowsIdentity.GetCurrent().Name;
+                        //Logger.Current.Info($"Searching in current user store: {userName}");
+                        //store = new X509Store(StoreLocation.CurrentUser);
+                        //store.Open(OpenFlags.ReadOnly);
+                        //Configuration.Certificate = store.Certificates.Cast<X509Certificate2>().Where(n => n.FriendlyName == Configuration.CertificateName).FirstOrDefault();
+                        //if (Configuration.Certificate != null)
+                        //    Logger.Current.Info($"Using certificate from current user store: {userName}");
+                | _ -> Some configuration.Certificate
+            | false -> None
+
         let toSettings (configuration: InitializationData) = {
             LocalAddress = configuration.LocalAddress
             Webroot = configuration.Webroot
@@ -68,7 +103,7 @@ module Server =
             IsTlsEnabled = configuration.IsTlsEnabled
             TlsTracing = configuration.TlsTracing
             TlsRedirect = configuration.TlsRedirect
-            Certificate = configuration.Certificate
+            Certificate = getCertificate ()
             CheckRevocation = configuration.CheckRevocation
             //member val  public string[] AppCaches { get; set; }
             CertificateName = configuration.CertificateName
@@ -76,15 +111,6 @@ module Server =
             XFrameOptions = configuration.XFrameOptions
             TlsProtocols = configuration.TlsProtocols
         }
-
-        let initializeTls () = 
-            use store = new X509Store (StoreLocation.LocalMachine)
-            store.Open OpenFlags.ReadOnly
-  //          if Settings.Current.Certificate = null then
-//                let certificate = store.Certificates.Cast<X509Certificate2>().Where(n => n.FriendlyName == Configuration.CertificateName).FirstOrDefault();
-
-
-            ()
 
         Logger.Info "Starting Web Server"
 
@@ -100,8 +126,13 @@ module Server =
         if Settings.Current.LocalAddress <> IPAddress.Any then
             Logger.Info (sprintf "Binding to local address: %s" (Settings.Current.LocalAddress.ToString ()))
         if Settings.Current.IsTlsEnabled then
-            Logger.Info("Initializing TLS")
-            initializeTls ()
+            match Settings.Current.Certificate with
+            | Some certificate -> Logger.Info (sprintf "Using certificate %A" certificate)
+            | None -> failwith (sprintf "No certificate with display name %A found" Settings.Current.CertificateName)
+
+            if Settings.Current.CheckRevocation then 
+                Logger.Info ("Checking revocation lists")
+            
             Logger.Info (sprintf "Listening on secure port %d" Settings.Current.TlsPort)
                 //var result = Ipv6TcpListenerFactory.Create(configuration.TlsPort);
                 //tlsListener = result.Listener;

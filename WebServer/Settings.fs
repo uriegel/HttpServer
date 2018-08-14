@@ -21,7 +21,7 @@ type SettingsData = {
     IsTlsEnabled: bool
     TlsTracing: bool
     TlsRedirect: bool
-    Certificate: X509Certificate2
+    Certificate: X509Certificate2 Option
     CheckRevocation: bool
     //member val  public string[] AppCaches { get; set; }
     CertificateName: string
@@ -46,7 +46,7 @@ type Settings() =
         IsTlsEnabled = false
         TlsTracing = false
         TlsRedirect = false
-        Certificate = null
+        Certificate = None
         CheckRevocation = false
         //member val  public string[] AppCaches { get; set; }
         CertificateName = ""
