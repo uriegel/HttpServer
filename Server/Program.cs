@@ -8,20 +8,23 @@ namespace Server
     {
         static void Main(string[] args)
         {
+            Logger.Current.MinLogLevel = Logger.LogLevel.LowTrace;
             var newCofig = new WebServer.InitializationData
             {
-                Webroot = @"..\..\..\..\..\SuperfitUI\dist\superfitui",
-                // Webroot = @"C:\Program Files\caesar\CAEWebSrv\web",
+                // Webroot = @"..\..\..\..\..\SuperfitUI\dist\superfitui",
+                Webroot = @"C:\Program Files\caesar\CAEWebSrv\web",
                 IsTlsEnabled = true,
+                CertificateName = "CAESAR",
                 DomainName = "riegel.selfhost.eu",
                 TlsRedirect = true
             };
             WebServer.Server.Start(newCofig);
+            Console.WriteLine("Press any key to stop...");
+            Console.ReadLine();
             WebServer.Server.Stop();
 
-            Console.ReadLine();
 
-            Logger.Current.MinLogLevel = Logger.LogLevel.LowTrace;
+            Console.ReadLine();
             var configuration = new Configuration
             {
 //                Webroot = @"..\..\..\..\..\SuperfitUI\dist\superfitui",
