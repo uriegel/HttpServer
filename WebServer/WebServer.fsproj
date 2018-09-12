@@ -9,6 +9,7 @@
     <Compile Include="ConsoleLogger.fs" />
     <Compile Include="Logger.fs" />
     <Compile Include="Settings.fs" />
+    <Compile Include="SocketSession.fs" />
     <Compile Include="Server.fs" />
   </ItemGroup>
 

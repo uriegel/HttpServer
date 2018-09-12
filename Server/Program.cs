@@ -8,7 +8,7 @@ namespace Server
     {
         static void Main(string[] args)
         {
-            Logger.Current.MinLogLevel = Logger.LogLevel.LowTrace;
+            WebServer.Logger.lowTraceEnabled = true;
             var newCofig = new WebServer.InitializationData
             {
                 // Webroot = @"..\..\..\..\..\SuperfitUI\dist\superfitui",

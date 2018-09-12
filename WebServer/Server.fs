@@ -70,11 +70,10 @@ module Server =
                 | e -> Logger.Error (sprintf "Error occurred in connecting thread: %A" e)
         }
 
-    let private onConnected isSecured (tcpClient: TcpClient) =
+    let private onConnected (tcpClient: TcpClient) =
         if isStarted then
             try
-                ()
-                //SocketSession.StartReceiving(this, tcpClient, isSecured);
+                SocketSession.startReceiving tcpClient
             with 
             | :? SocketException as se when se.NativeErrorCode = 10054 -> ()
             | :? ObjectDisposedException -> ()  // Stop() aufgerufen 
@@ -218,7 +217,7 @@ module Server =
                 Logger.Info ("Starting listener...")
                 listener.Value.Start ()
                 isStarted <- true
-                startConnecting listener.Value (onConnected Settings.Current.IsTlsEnabled) |> Async.StartImmediate
+                startConnecting listener.Value onConnected |> Async.StartImmediate
                 Logger.Info ("Listener started")
         
                 match tlsRedirectListener with
