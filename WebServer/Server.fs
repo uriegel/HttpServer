@@ -26,6 +26,7 @@ type InitializationData() =
     member val IsTlsEnabled = false with get, set 
     member val TlsTracing = false with get, set 
     member val TlsRedirect = false with get, set 
+    member val Http2 = false with get, set 
     member val Certificate: X509Certificate2 = null with get, set 
     member val LowestProtocol = TlsProtocol.Tls10 with get, set 
     member val CheckRevocation = false with get, set 
@@ -58,37 +59,41 @@ module Server =
     let mutable private listener: TcpListener Option = None
     let mutable private tlsRedirectListener: TcpListener Option = None
 
-    let rec private startConnecting (listener: TcpListener) onConnected = 
+    let rec private asyncStartConnecting (listener: TcpListener) onConnected = 
         async {
             if isStarted then
                 try 
                     let! client = listener.AcceptTcpClientAsync () |> Async.AwaitTask
-                    startConnecting listener onConnected |> Async.StartImmediate
-                    onConnected client
+                    asyncStartConnecting listener onConnected |> Async.StartImmediate
+                    onConnected client |> Async.StartImmediate
                 with 
                 | :? SocketException as se when se.SocketErrorCode = SocketError.Interrupted && not isStarted -> ()
                 | e -> Logger.Error (sprintf "Error occurred in connecting thread: %A" e)
         }
 
-    let private onConnected (tcpClient: TcpClient) =
-        if isStarted then
-            try
-                SocketSession.startReceiving tcpClient
-            with 
-            | :? SocketException as se when se.NativeErrorCode = 10054 -> ()
-            | :? ObjectDisposedException -> ()  // Stop() aufgerufen 
-            | e when isStarted -> Logger.Error (sprintf "Error in OnConnected occurred: %A" e)
+    let private asyncOnConnected (tcpClient: TcpClient) =
+        async {
+            if isStarted then
+                try
+                    do! SocketSession.asyncStartReceiving tcpClient 
+                with 
+                | :? SocketException as se when se.NativeErrorCode = 10054 -> ()
+                | :? ObjectDisposedException -> ()  // Stop() aufgerufen 
+                | e when isStarted -> Logger.Error (sprintf "Error in OnConnected occurred: %A" e)
+        }
         
-    let private onTlsRedirect (tcpClient: TcpClient) =
-        if isStarted then
-            try
-                ()
-                // TODO: Header HTTP 1.1 auslesen, dann 301 senden
-                //SocketSession.StartReceiving(this, tcpClient, isSecured);
-            with 
-            | :? SocketException as se when se.NativeErrorCode = 10054 -> ()
-            | :? ObjectDisposedException -> ()  // Stop() aufgerufen 
-            | e when isStarted -> Logger.Error (sprintf "Error in onTlsRedirect occurred: %A" e)
+    let private asyncOnTlsRedirect (tcpClient: TcpClient) =
+        async {
+            if isStarted then
+                try
+                    ()
+                    // TODO: Header HTTP 1.1 auslesen, dann 301 senden
+                    //SocketSession.StartReceiving(this, tcpClient, isSecured);
+                with 
+                | :? SocketException as se when se.NativeErrorCode = 10054 -> ()
+                | :? ObjectDisposedException -> ()  // Stop() aufgerufen 
+                | e when isStarted -> Logger.Error (sprintf "Error in onTlsRedirect occurred: %A" e)
+        }
 
     let Start (configuration: InitializationData) = 
         if not isStarted then
@@ -150,6 +155,7 @@ module Server =
                     IsTlsEnabled = configuration.IsTlsEnabled
                     TlsTracing = configuration.TlsTracing
                     TlsRedirect = configuration.TlsRedirect
+                    Http2 = configuration.Http2
                     Certificate = getCertificate ()
                     CheckRevocation = configuration.CheckRevocation
                     //member val  public string[] AppCaches { get; set; }
@@ -217,14 +223,14 @@ module Server =
                 Logger.Info ("Starting listener...")
                 listener.Value.Start ()
                 isStarted <- true
-                startConnecting listener.Value onConnected |> Async.StartImmediate
+                asyncStartConnecting listener.Value asyncOnConnected |> Async.StartImmediate
                 Logger.Info ("Listener started")
         
                 match tlsRedirectListener with
                 | Some listener ->
                     Logger.Info ("Starting HTTP redirection listener...")
                     listener.Start ()
-                    startConnecting listener onTlsRedirect |> Async.StartImmediate
+                    asyncStartConnecting listener asyncOnTlsRedirect |> Async.StartImmediate
                     Logger.Info ("HTTPS redirection listener started")
                 | None -> ()
 

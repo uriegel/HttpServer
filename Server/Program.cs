@@ -14,6 +14,7 @@ namespace Server
                 // Webroot = @"..\..\..\..\..\SuperfitUI\dist\superfitui",
                 Webroot = @"C:\Program Files\caesar\CAEWebSrv\web",
                 IsTlsEnabled = true,
+                Http2 = true,
                 CertificateName = "CAESAR",
                 DomainName = "riegel.selfhost.eu",
                 TlsRedirect = true
