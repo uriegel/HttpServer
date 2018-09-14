@@ -5,10 +5,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="Frame.fs" />
+    <Compile Include="Request11Session.fs" />
     <Compile Include="Ipv6TcpListenerFactory.fs" />
     <Compile Include="ConsoleLogger.fs" />
     <Compile Include="Logger.fs" />
-    <Compile Include="Settings.fs" />
+    <Compile Include="Configuration.fs" />
+    <Compile Include="RequestSession.fs" />
     <Compile Include="SocketSession.fs" />
     <Compile Include="Server.fs" />
   </ItemGroup>

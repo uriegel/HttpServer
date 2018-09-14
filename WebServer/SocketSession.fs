@@ -23,16 +23,16 @@ module SocketSession =
                         EnabledSslProtocols = SslProtocols.Tls12,
                         AllowRenegotiation = false,
                         CertificateRevocationCheckMode = 
-                            if Settings.Current.CheckRevocation then 
+                            if Configuration.Current.CheckRevocation then 
                                 X509RevocationMode.Online 
                             else 
                                 X509RevocationMode.NoCheck
                         ,
                         ClientCertificateRequired = false,
                         EncryptionPolicy = EncryptionPolicy.RequireEncryption,
-                        ServerCertificate = Settings.Current.Certificate.Value,
+                        ServerCertificate = Configuration.Current.Certificate.Value,
                         ServerCertificateSelectionCallback = null)
-                if Settings.Current.Http2 then
+                if Configuration.Current.Http2 then
                     authOptions.ApplicationProtocols.Add SslApplicationProtocol.Http2
                 authOptions.ApplicationProtocols.Add SslApplicationProtocol.Http11
                 do! sslStream.AuthenticateAsServerAsync (authOptions, CancellationToken false) |> Async.AwaitTask
@@ -57,24 +57,24 @@ module SocketSession =
             }
         
         async {
-            Logger.LowTrace(fun () -> sprintf "%d - New %ssocket session created: - %A" id (if Settings.Current.IsTlsEnabled then "secure " else "") tcpClient.Client.RemoteEndPoint)
+            Logger.LowTrace(fun () -> sprintf "%d - New %ssocket session created: - %A" id (if Configuration.Current.IsTlsEnabled then "secure " else "") tcpClient.Client.RemoteEndPoint)
             // TODO: Counter erhöhen
-            tcpClient.ReceiveTimeout <- Settings.Current.SocketTimeout
-            tcpClient.SendTimeout <- Settings.Current.SocketTimeout
+            tcpClient.ReceiveTimeout <- Configuration.Current.SocketTimeout
+            tcpClient.SendTimeout <- Configuration.Current.SocketTimeout
         
             let! networkStream = 
-                if Settings.Current.IsTlsEnabled then 
+                if Configuration.Current.IsTlsEnabled then 
                     asyncGetTlsNetworkStream ()
                 else
                     async { return tcpClient.GetStream () :> Stream }
             try
                 let rec asyncReceive () = 
                     async {
-
+                        if http2 then do! RequestSession.asyncStart id networkStream else do! Request11Session.asyncStart id networkStream
                         return! asyncReceive ()
                     }
         
-                asyncReceive() |> Async.StartImmediate
+                do! asyncReceive () 
             with
             | :? AuthenticationException as e -> 
                 Logger.Warning (sprintf "%d - An authentication error has occurred while reading socket, session: %A, error: %A" id tcpClient.Client.RemoteEndPoint e)
@@ -84,7 +84,7 @@ module SocketSession =
             | :? SocketException as e ->
                 Logger.LowTrace (fun () -> sprintf "%d - Closing socket session, reason: %A" id e)
             | :? ObjectDisposedException ->
-                Logger.Trace (sprintf "%d- Object disposed" id)
+                Logger.LowTrace (fun () -> sprintf "%d- Object disposed" id)
             | e -> Logger.Warning (sprintf "%d - An error has occurred while reading socket, error: %A" id e)
             tcpClient.Close ()
             // TODO: Counter erniedrigen

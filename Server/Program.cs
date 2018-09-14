@@ -16,7 +16,8 @@ namespace Server
                 IsTlsEnabled = true,
                 Http2 = true,
                 CertificateName = "CAESAR",
-                DomainName = "riegel.selfhost.eu",
+                //DomainName = "riegel.selfhost.eu",
+                DomainName = "cas-ws121013.caseris.intern",
                 TlsRedirect = true
             };
             WebServer.Server.Start(newCofig);

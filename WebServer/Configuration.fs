@@ -9,7 +9,7 @@ type XFrameOptions =
     | DENY = 1
     | SAMEORIGIN= 2
 
-type SettingsData = {
+type ConfigurationData = {
     LocalAddress: IPAddress
     Webroot: string
     SocketTimeout: int
@@ -31,8 +31,8 @@ type SettingsData = {
     TlsProtocols: SslProtocols
 }
 
-type Settings() = 
-    static member val private current = Settings.createDefault ()
+type Configuration() = 
+    static member val private current = Configuration.createDefault ()
         with get, set
 
     static member private createDefault () = {
@@ -58,8 +58,8 @@ type Settings() =
     }
  
     static member Current 
-        with get() = Settings.current
+        with get() = Configuration.current
 
     static member Initialize settingsData = 
-        Settings.current <- settingsData
+        Configuration.current <- settingsData
 

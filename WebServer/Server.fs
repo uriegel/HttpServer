@@ -46,14 +46,14 @@ type InitializationData() =
 
 module Server =
     let getPort () = 
-        match Settings.Current.IsTlsEnabled with
-        | true when Settings.Current.TlsPort = 443 -> ""
-        | true -> string Settings.Current.TlsPort
-        | false when Settings.Current.Port = 80 -> ""
-        | false -> string Settings.Current.Port
+        match Configuration.Current.IsTlsEnabled with
+        | true when Configuration.Current.TlsPort = 443 -> ""
+        | true -> string Configuration.Current.TlsPort
+        | false when Configuration.Current.Port = 80 -> ""
+        | false -> string Configuration.Current.Port
 
     let getBaseUrl () =
-        sprintf "http%s://%s%s" (if Settings.Current.IsTlsEnabled then "s" else "") Settings.Current.DomainName (getPort ())
+        sprintf "http%s://%s%s" (if Configuration.Current.IsTlsEnabled then "s" else "") Configuration.Current.DomainName (getPort ())
     
     let mutable private isStarted = false
     let mutable private listener: TcpListener Option = None
@@ -171,26 +171,26 @@ module Server =
                 ServicePointManager.SecurityProtocol <- SecurityProtocolType.Tls12 ||| SecurityProtocolType.Tls11 ||| SecurityProtocolType.Tls 
                 ThreadPool.SetMinThreads (1000, 1000) |> ignore
 
-                Settings.Initialize (toSettings configuration)
+                Configuration.Initialize (toSettings configuration)
 
-                Logger.Info (sprintf "Socket timeout: %ds" (Settings.Current.SocketTimeout / 1000))
-                Logger.Info (sprintf "Domain name: %s" Settings.Current.DomainName)
+                Logger.Info (sprintf "Socket timeout: %ds" (Configuration.Current.SocketTimeout / 1000))
+                Logger.Info (sprintf "Domain name: %s" Configuration.Current.DomainName)
 
-                if Settings.Current.LocalAddress <> IPAddress.Any then
-                    Logger.Info (sprintf "Binding to local address: %s" (Settings.Current.LocalAddress.ToString ()))
+                if Configuration.Current.LocalAddress <> IPAddress.Any then
+                    Logger.Info (sprintf "Binding to local address: %s" (Configuration.Current.LocalAddress.ToString ()))
         
                 let (l,tlsl) =
-                    if Settings.Current.IsTlsEnabled then
+                    if Configuration.Current.IsTlsEnabled then
                         Logger.Info (sprintf "Supported secure protocols: %A" configuration.TlsProtocols)
 
-                        match Settings.Current.Certificate with
+                        match Configuration.Current.Certificate with
                         | Some certificate -> Logger.Info (sprintf "Using certificate %A" certificate)
-                        | None -> failwith (sprintf "No certificate with display name %A found" Settings.Current.CertificateName)
+                        | None -> failwith (sprintf "No certificate with display name %A found" Configuration.Current.CertificateName)
 
-                        if Settings.Current.CheckRevocation then 
+                        if Configuration.Current.CheckRevocation then 
                             Logger.Info ("Checking revocation lists")
             
-                        Logger.Info (sprintf "Listening on secure port %d" Settings.Current.TlsPort)
+                        Logger.Info (sprintf "Listening on secure port %d" Configuration.Current.TlsPort)
                         let listener = Ipv6TcpListenerFactory.create configuration.TlsPort
                         if not listener.Ipv6 then
                             Logger.Info ("IPv6 or IPv6 dual mode not supported, switching to IPv4")
