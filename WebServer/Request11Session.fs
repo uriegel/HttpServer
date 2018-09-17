@@ -2,6 +2,7 @@
 
 open System.IO
 open System.Threading
+open Microsoft.Extensions.Logging
 
 module Request11Session =
     let mutable private idSeed = 0
@@ -13,7 +14,11 @@ module Request11Session =
     let asyncStart socketSessionId (networkStream: Stream) =
         async {
             let id = initialize socketSessionId
-            let! magicBytes = networkStream.AsyncRead 0
+            let headerBytes = Array.zeroCreate 8192
+            let! read = networkStream.AsyncRead headerBytes
+            let hedder = System.Text.Encoding.UTF8.GetString (headerBytes)
+            // TODO: wenn header nicht vollständig, erneut einlesen und string concatten, bis \r\n\r\n enthalten
+
             ()
         }
 

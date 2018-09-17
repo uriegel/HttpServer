@@ -1,25 +1,22 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
   </PropertyGroup>
-
   <ItemGroup>
     <Compile Include="Frame.fs" />
-    <Compile Include="Request11Session.fs" />
     <Compile Include="Ipv6TcpListenerFactory.fs" />
     <Compile Include="ConsoleLogger.fs" />
     <Compile Include="Logger.fs" />
+    <Compile Include="Header.fs" />
     <Compile Include="Configuration.fs" />
+    <Compile Include="Request11Session.fs" />
     <Compile Include="RequestSession.fs" />
     <Compile Include="SocketSession.fs" />
     <Compile Include="Server.fs" />
   </ItemGroup>
-
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Logging" Version="2.1.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="2.1.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="2.1.1" />
   </ItemGroup>
-
 </Project>
