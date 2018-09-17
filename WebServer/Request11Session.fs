@@ -11,14 +11,24 @@ module Request11Session =
         let id = Interlocked.Increment &idSeed
         sprintf "%d-%d" socketSessionId id
 
+    let headerBytes = Array.zeroCreate 20000
+
     let asyncStart socketSessionId (networkStream: Stream) =
+        let rec readHeader alreadyRead =
+            async {
+                let! read = networkStream.AsyncRead (headerBytes, alreadyRead, headerBytes.Length - alreadyRead)
+                let alreadyRead = alreadyRead + read
+                let header = System.Text.Encoding.UTF8.GetString (headerBytes, 0, alreadyRead)
+                if header.Contains("\r\n\r\n") then
+                    return (header, alreadyRead)
+                else
+                    return! readHeader alreadyRead
+            }
+
         async {
             let id = initialize socketSessionId
-            let headerBytes = Array.zeroCreate 8192
-            let! read = networkStream.AsyncRead headerBytes
-            let hedder = System.Text.Encoding.UTF8.GetString (headerBytes)
-            // TODO: wenn header nicht vollständig, erneut einlesen und string concatten, bis \r\n\r\n enthalten
-
+            let! (headerString, alreadyRead) = readHeader 0
+            
             ()
         }
 
