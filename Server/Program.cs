@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Security.Cryptography.X509Certificates;
 using HttpServer;
 
 namespace Server
@@ -8,6 +9,14 @@ namespace Server
     {
         static void Main(string[] args)
         {
+            // var certificate = new X509Certificate2(@"c:\users\uwe.CASERIS\desktop\affe.pfx", "uwe", X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.MachineKeySet);
+            // certificate.FriendlyName = "URiegel";
+            // using (var store = new X509Store(StoreName.My, StoreLocation.CurrentUser))
+            // {
+            //     store.Open(OpenFlags.ReadWrite);
+            //     store.Add(certificate);
+            // }
+
             WebServer.Logger.lowTraceEnabled = true;
             var newCofig = new WebServer.InitializationData
             {

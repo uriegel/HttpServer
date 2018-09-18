@@ -28,7 +28,13 @@ module Request11Session =
         async {
             let id = initialize socketSessionId
             let! (headerString, alreadyRead) = readHeader 0
+            let headers = Header11.createHeaderAccess headerString
             
+            
+            // TODO: Nimm ein Request-Object und übergib headers und payloadAccess
+            // TODO: TLS-Redirect als Option, aber ACME für Certbot priorisieren
+            let path = headers HeaderKey.Path
+            let method = headers HeaderKey.Method
             ()
         }
 

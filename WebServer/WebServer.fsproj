@@ -8,6 +8,7 @@
     <Compile Include="ConsoleLogger.fs" />
     <Compile Include="Logger.fs" />
     <Compile Include="Header.fs" />
+    <Compile Include="Header11.fs" />
     <Compile Include="Configuration.fs" />
     <Compile Include="Request11Session.fs" />
     <Compile Include="RequestSession.fs" />

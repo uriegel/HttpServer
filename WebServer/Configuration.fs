@@ -32,10 +32,10 @@ type ConfigurationData = {
 }
 
 type Configuration() = 
-    static member val private current = Configuration.createDefault ()
+    static member val private current = Configuration.CreateDefault ()
         with get, set
 
-    static member private createDefault () = {
+    static member private CreateDefault () = {
         LocalAddress = IPAddress.Any
         Webroot = ""
         SocketTimeout = 20000
