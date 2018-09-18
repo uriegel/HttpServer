@@ -17,39 +17,51 @@ namespace Server
             //     store.Add(certificate);
             // }
 
-            WebServer.Logger.lowTraceEnabled = true;
-            var newCofig = new WebServer.InitializationData
-            {
-                //Webroot = @"..\..\..\..\..\SuperfitUI\dist\superfitui",
-                Webroot = @"C:\Program Files\caesar\CAEWebSrv\web",
-                IsTlsEnabled = true,
-                //Http2 = true,
-                CertificateName = "CAESAR",
-                //CertificateName = "URIEGEL",
-                //DomainName = "riegel.selfhost.eu",
-                DomainName = "cas-ws121013.caseris.intern",
-                TlsRedirect = true
-            };
-            WebServer.Server.Start(newCofig);
-            Console.WriteLine("Press any key to stop...");
-            Console.ReadLine();
-            WebServer.Server.Stop();
+            // WebServer.Logger.lowTraceEnabled = true;
+            // var newCofig = new WebServer.InitializationData
+            // {
+            //     //Webroot = @"..\..\..\..\..\SuperfitUI\dist\superfitui",
+            //     Webroot = @"C:\Program Files\caesar\CAEWebSrv\web",
+            //     IsTlsEnabled = true,
+            //     //Http2 = true,
+            //     CertificateName = "CAESAR",
+            //     //CertificateName = "URIEGEL",
+            //     //DomainName = "riegel.selfhost.eu",
+            //     DomainName = "cas-ws121013.caseris.intern",
+            //     TlsRedirect = true
+            // };
+            // WebServer.Server.Start(newCofig);
+            // Console.WriteLine("Press any key to stop...");
+            // Console.ReadLine();
+            // WebServer.Server.Stop();
 
             // C#
 
-//             var configuration = new Configuration
-//             {
-// //                Webroot = @"..\..\..\..\..\SuperfitUI\dist\superfitui",
-//                 Webroot = @"C:\Program Files\caesar\CAEWebSrv\web",
-//                 IsTlsEnabled = true,
-//                 HTTP2 = true
-//             };
-//             var server = new HttpServer.Server(configuration);
-//             server.Start();
-//             Console.WriteLine("Press any key to stop...");
-//             Console.ReadLine();
-//             server.Stop();
-//             Console.ReadLine();
+            var certificateFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "certificate.pfx");
+            //var certificateFile = @"d:\test\Riegel.selfhost.eu.pfx";
+            //var certificateFile = @"d:\test\zert.pfx";
+            //var certificateFile = @"d:\test\zertOhneAntragsteller.pfx";
+            var beits = new byte[new FileInfo(certificateFile).Length];
+            using (var file = File.OpenRead(certificateFile))
+                file.Read(beits, 0, beits.Length);
+            var certificate = new X509Certificate2(beits, "uwe");
+
+            var configuration = new Configuration
+            {
+                //Webroot = @"..\..\..\..\..\SuperfitUI\dist\superfitui",
+//                Webroot = @"C:\Program Files\caesar\CAEWebSrv\web",
+                IsTlsEnabled = true,
+                TlsPort = 443,
+                Port = 80,
+                Certificate = certificate,
+  //              HTTP2 = true
+            };
+            var server = new HttpServer.Server(configuration);
+            server.Start();
+            Console.WriteLine("Press any key to stop...");
+            Console.ReadLine();
+            server.Stop();
+            Console.ReadLine();
         }
     }
 }

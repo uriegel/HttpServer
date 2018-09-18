@@ -245,35 +245,18 @@ namespace HttpServer
 
         void InitializeTls()
         {
-            var store = new X509Store(StoreLocation.LocalMachine);
-            store.Open(OpenFlags.ReadOnly);
             if (Configuration.Certificate == null)
             {
-                Configuration.Certificate = store.Certificates.Cast<X509Certificate2>().Where(n => n.FriendlyName == Configuration.CertificateName).FirstOrDefault();
+                var store = new X509Store(StoreLocation.LocalMachine);
+                store.Open(OpenFlags.ReadOnly);
                 if (Configuration.Certificate == null)
                 {
-                    var certificateFile = @"c:\users\urieg\desktop\Riegel.selfhost.eu.pfx";
-                    //var certificateFile = @"d:\test\Riegel.selfhost.eu.pfx";
-                    //var certificateFile = @"d:\test\zert.pfx";
-                    //var certificateFile = @"d:\test\zertOhneAntragsteller.pfx";
-
-                    //var certificateFile = @"D:\OpenSSL\bin\affe\key.pem";
-                    var beits = new byte[new FileInfo(certificateFile).Length];
-                    using (var file = File.OpenRead(certificateFile))
-                        file.Read(beits, 0, beits.Length);
-                    Configuration.Certificate = new X509Certificate2(beits, "caesar");
-                    //var userName = System.Security.Principal.WindowsIdentity.GetCurrent().Name;
-                    //Logger.Current.Info($"Searching in current user store: {userName}");
-                    //store = new X509Store(StoreLocation.CurrentUser);
-                    //store.Open(OpenFlags.ReadOnly);
-                    //Configuration.Certificate = store.Certificates.Cast<X509Certificate2>().Where(n => n.FriendlyName == Configuration.CertificateName).FirstOrDefault();
-                    //if (Configuration.Certificate != null)
-                    //    Logger.Current.Info($"Using certificate from current user store: {userName}");
+                    Configuration.Certificate = store.Certificates.Cast<X509Certificate2>().Where(n => n.FriendlyName == Configuration.CertificateName).FirstOrDefault();
+                    if (Configuration.Certificate != null)
+                        Logger.Current.Info($"Using certificate {Configuration.Certificate}");
+                    else
+                        Logger.Current.Fatal($@"No certificate with display name ""{Configuration.CertificateName}"" found");
                 }
-                if (Configuration.Certificate != null)
-                    Logger.Current.Info($"Using certificate {Configuration.Certificate}");
-                else
-                    Logger.Current.Fatal($@"No certificate with display name ""{Configuration.CertificateName}"" found");
             }
             if (Configuration.CheckRevocation)
                 Logger.Current.Info("Checking revocation lists");
