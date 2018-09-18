@@ -22,9 +22,9 @@ module Header11 =
 
         let getHeaderValue headerKey = 
             match headerKey with
-            | HeaderKey.Method -> method :> Object
-            | HeaderKey.Path -> path :> Object
-            | HeaderKey.IfModifiedSince -> "" :> Object
+            | HeaderKey.Method -> method :> obj
+            | HeaderKey.Path -> path :> obj
+            | HeaderKey.IfModifiedSince -> "" :> obj
             | _ -> failwith "Unknown header key"
 
         getHeaderValue

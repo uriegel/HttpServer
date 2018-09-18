@@ -10,6 +10,7 @@
     <Compile Include="Header.fs" />
     <Compile Include="Header11.fs" />
     <Compile Include="Configuration.fs" />
+    <Compile Include="Request.fs" />
     <Compile Include="Request11Session.fs" />
     <Compile Include="RequestSession.fs" />
     <Compile Include="SocketSession.fs" />
