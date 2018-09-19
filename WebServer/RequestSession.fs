@@ -6,12 +6,12 @@ open System
 module RequestSession =
     let asyncStart socketSessionId (networkStream: Stream) =
         let MAGIC = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n"
-
+        
         let mutable headerTableSize = 0
         let mutable windowUpdate = 0
 
-        let lowTrace (getText: unit->string) = 
-            Logger.LowTrace (fun () -> sprintf "%d - %s" socketSessionId (getText ()))
+        let log = Logger.log (string socketSessionId)
+        let lowTrace = Logger.lowTrace (string socketSessionId)
 
         let asyncReadFrame () = 
             async {
@@ -47,7 +47,6 @@ module RequestSession =
                 let bytes = frame.serialize ()
                 do! networkStream.AsyncWrite (bytes, 0, bytes.Length)
             }
-
 
         let rec asyncReadNextFrame () = 
             async {

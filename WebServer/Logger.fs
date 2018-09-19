@@ -5,13 +5,12 @@ open Microsoft.Extensions.Logging
 module Logger =
 
     let mutable lowTraceEnabled = false
-    let internal loggerFactory = new LoggerFactory()
-    loggerFactory.AddProvider(new ConsoleLoggerProvider())
-    loggerFactory.AddDebug() |> ignore
-    let internal logger = loggerFactory.CreateLogger("WebServer")
+    let private loggerFactory = new LoggerFactory ()
+    loggerFactory.AddProvider (new ConsoleLoggerProvider ())
+    //loggerFactory.AddDebug () |> ignore
+    let private logger = loggerFactory.CreateLogger("WebServer")
     
-    let LowTrace (getText: unit->string) = if lowTraceEnabled then logger.LogTrace (getText ())
-    let Trace text = logger.LogTrace text
-    let Info text = logger.LogInformation text
-    let Warning text = logger.LogWarning text
-    let Error text = logger.LogError text
+    let log category logLevel text =
+        logger.Log (logLevel, sprintf "%s-%s" category text)
+
+    let lowTrace category getText = if lowTraceEnabled then logger.LogTrace (sprintf "%s-%s" category (getText ()))

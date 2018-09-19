@@ -7,6 +7,7 @@ open System.IO
 open System
 open System.Net.Security
 open System.Security.Cryptography.X509Certificates
+open Microsoft.Extensions.Logging
 
 module SocketSession = 
     let mutable private idSeed = 0
@@ -14,6 +15,8 @@ module SocketSession =
 
     let asyncStartReceiving (tcpClient: TcpClient) = 
         let id = Interlocked.Increment &idSeed
+        let log = Logger.log (string id)
+        let lowTrace = Logger.lowTrace (string id)
         let asyncGetTlsNetworkStream () =
             async {
                 let stream = tcpClient.GetStream ()
@@ -37,7 +40,7 @@ module SocketSession =
                 authOptions.ApplicationProtocols.Add SslApplicationProtocol.Http11
                 do! sslStream.AuthenticateAsServerAsync (authOptions, CancellationToken false) |> Async.AwaitTask
 
-                Logger.LowTrace(fun () ->
+                lowTrace (fun () ->
                     let getKeyExchangeAlgorithm () = 
                         if (int sslStream.KeyExchangeAlgorithm) = 44550 then "ECDHE" else sprintf "%A" sslStream.KeyExchangeAlgorithm
 
@@ -57,7 +60,7 @@ module SocketSession =
             }
         
         async {
-            Logger.LowTrace(fun () -> sprintf "%d - New %ssocket session created: - %A" id (if Configuration.Current.IsTlsEnabled then "secure " else "") tcpClient.Client.RemoteEndPoint)
+            lowTrace (fun () -> sprintf "New %ssocket session created: - %A" (if Configuration.Current.IsTlsEnabled then "secure " else "") tcpClient.Client.RemoteEndPoint)
             // TODO: Counter erhöhen
             tcpClient.ReceiveTimeout <- Configuration.Current.SocketTimeout
             tcpClient.SendTimeout <- Configuration.Current.SocketTimeout
@@ -77,15 +80,15 @@ module SocketSession =
                 do! asyncReceive () 
             with
             | :? AuthenticationException as e -> 
-                Logger.Warning (sprintf "%d - An authentication error has occurred while reading socket, session: %A, error: %A" id tcpClient.Client.RemoteEndPoint e)
+                log LogLevel.Warning (sprintf "An authentication error has occurred while reading socket, session: %A, error: %A" tcpClient.Client.RemoteEndPoint e)
             | :? IOException
             // TODO
             //| :? ConnectionClosedException as e
             | :? SocketException as e ->
-                Logger.LowTrace (fun () -> sprintf "%d - Closing socket session, reason: %A" id e)
+                lowTrace (fun () -> sprintf "Closing socket session, reason: %A" e)
             | :? ObjectDisposedException ->
-                Logger.LowTrace (fun () -> sprintf "%d- Object disposed" id)
-            | e -> Logger.Warning (sprintf "%d - An error has occurred while reading socket, error: %A" id e)
+                lowTrace (fun () -> "Object disposed")
+            | e -> log LogLevel.Warning (sprintf "An error has occurred while reading socket, error: %A" e)
             tcpClient.Close ()
             // TODO: Counter erniedrigen
         }        

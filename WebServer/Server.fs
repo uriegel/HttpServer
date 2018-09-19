@@ -8,6 +8,7 @@ open System.Security.Authentication
 open System.Threading
 open System.Net.Sockets
 open System
+open Microsoft.Extensions.Logging
 
 type TlsProtocol =
     Tls10 = 0
@@ -45,6 +46,7 @@ type InitializationData() =
             | _ -> SslProtocols.Tls ||| SslProtocols.Tls11 ||| SslProtocols.Tls12
 
 module Server =
+    let private log = Logger.log "Server"
     let getPort () = 
         match Configuration.Current.IsTlsEnabled with
         | true when Configuration.Current.TlsPort = 443 -> ""
@@ -68,7 +70,7 @@ module Server =
                     onConnected client |> Async.StartImmediate
                 with 
                 | :? SocketException as se when se.SocketErrorCode = SocketError.Interrupted && not isStarted -> ()
-                | e -> Logger.Error (sprintf "Error occurred in connecting thread: %A" e)
+                | e -> log LogLevel.Error (sprintf "Error occurred in connecting thread: %A" e)
         }
 
     let private asyncOnConnected (tcpClient: TcpClient) =
@@ -79,7 +81,7 @@ module Server =
                 with 
                 | :? SocketException as se when se.NativeErrorCode = 10054 -> ()
                 | :? ObjectDisposedException -> ()  // Stop() aufgerufen 
-                | e when isStarted -> Logger.Error (sprintf "Error in OnConnected occurred: %A" e)
+                | e when isStarted -> log LogLevel.Error (sprintf "Error in OnConnected occurred: %A" e)
         }
         
     let private asyncOnTlsRedirect (tcpClient: TcpClient) =
@@ -92,7 +94,7 @@ module Server =
                 with 
                 | :? SocketException as se when se.NativeErrorCode = 10054 -> ()
                 | :? ObjectDisposedException -> ()  // Stop() aufgerufen 
-                | e when isStarted -> Logger.Error (sprintf "Error in onTlsRedirect occurred: %A" e)
+                | e when isStarted -> log LogLevel.Error (sprintf "Error in onTlsRedirect occurred: %A" e)
         }
 
     let Start (configuration: InitializationData) = 
@@ -135,9 +137,9 @@ module Server =
 
                 if configuration.HstsDurationInSeconds > 0 then
                     if configuration.IsTlsEnabled && configuration.TlsRedirect then
-                        Logger.Info (sprintf "Using HSTS: max-days=%A, max-age=%d" (configuration.HstsDurationInSeconds / (3600 * 24)) configuration.HstsDurationInSeconds)
+                        log LogLevel.Information (sprintf "Using HSTS: max-days=%A, max-age=%d" (configuration.HstsDurationInSeconds / (3600 * 24)) configuration.HstsDurationInSeconds)
                     else
-                        Logger.Warning "HSTS is only available when 'TlsEnabled=true' and 'TlsRedirect=true'"
+                        log LogLevel.Warning "HSTS is only available when 'TlsEnabled=true' and 'TlsRedirect=true'"
                         configuration.HstsDurationInSeconds <- 0
 
                 let toSettings (configuration: InitializationData) = {
@@ -165,7 +167,7 @@ module Server =
                     TlsProtocols = configuration.TlsProtocols
                 }
 
-                Logger.Info "Starting Web Server"
+                log LogLevel.Information "Starting Web Server"
 
                 ServicePointManager.DefaultConnectionLimit <- 1000 
                 ServicePointManager.SecurityProtocol <- SecurityProtocolType.Tls12 ||| SecurityProtocolType.Tls11 ||| SecurityProtocolType.Tls 
@@ -173,45 +175,45 @@ module Server =
 
                 Configuration.Initialize (toSettings configuration)
 
-                Logger.Info (sprintf "Socket timeout: %ds" (Configuration.Current.SocketTimeout / 1000))
-                Logger.Info (sprintf "Domain name: %s" Configuration.Current.DomainName)
+                log LogLevel.Information (sprintf "Socket timeout: %ds" (Configuration.Current.SocketTimeout / 1000))
+                log LogLevel.Information (sprintf "Domain name: %s" Configuration.Current.DomainName)
 
                 if Configuration.Current.LocalAddress <> IPAddress.Any then
-                    Logger.Info (sprintf "Binding to local address: %s" (Configuration.Current.LocalAddress.ToString ()))
+                    log LogLevel.Information (sprintf "Binding to local address: %s" (Configuration.Current.LocalAddress.ToString ()))
         
                 let (l,tlsl) =
                     if Configuration.Current.IsTlsEnabled then
-                        Logger.Info (sprintf "Supported secure protocols: %A" configuration.TlsProtocols)
+                        log LogLevel.Information (sprintf "Supported secure protocols: %A" configuration.TlsProtocols)
 
                         match Configuration.Current.Certificate with
-                        | Some certificate -> Logger.Info (sprintf "Using certificate %A" certificate)
+                        | Some certificate -> log LogLevel.Information (sprintf "Using certificate %A" certificate)
                         | None -> failwith (sprintf "No certificate with display name %A found" Configuration.Current.CertificateName)
 
                         if Configuration.Current.CheckRevocation then 
-                            Logger.Info ("Checking revocation lists")
+                            log LogLevel.Information "Checking revocation lists"
             
-                        Logger.Info (sprintf "Listening on secure port %d" Configuration.Current.TlsPort)
+                        log LogLevel.Information (sprintf "Listening on secure port %d" Configuration.Current.TlsPort)
                         let listener = Ipv6TcpListenerFactory.create configuration.TlsPort
                         if not listener.Ipv6 then
-                            Logger.Info ("IPv6 or IPv6 dual mode not supported, switching to IPv4")
+                            log LogLevel.Information ("IPv6 or IPv6 dual mode not supported, switching to IPv4")
 
                         let tlsRedirectListener = 
                             if configuration.TlsRedirect then
-                                Logger.Info("Initializing TLS redirect")
+                                log LogLevel.Information "Initializing TLS redirect"
                                 let listener = Ipv6TcpListenerFactory.create configuration.Port
                                 if not listener.Ipv6 then 
-                                    Logger.Info ("IPv6 or IPv6 dual mode not supported, switching to IPv4")
+                                    log LogLevel.Information "IPv6 or IPv6 dual mode not supported, switching to IPv4"
                                 Some listener
                             else
                                 None
 
-                        Logger.Info ("TLS initialized")
+                        log LogLevel.Information "TLS initialized"
                         (listener, tlsRedirectListener)
                     else
-                        Logger.Info (sprintf "Listening on port %d" configuration.Port)
+                        log LogLevel.Information (sprintf "Listening on port %d" configuration.Port)
                         let listener = Ipv6TcpListenerFactory.create configuration.Port
                         if not listener.Ipv6 then 
-                            Logger.Info ("IPv6 or IPv6 dual mode not supported, switching to IPv4")
+                            log LogLevel.Information "IPv6 or IPv6 dual mode not supported, switching to IPv4"
                         (listener, None)
                  
                 listener <- Some l.Listener
@@ -220,32 +222,32 @@ module Server =
                         | Some value -> Some value.Listener
                         | None -> None
 
-                Logger.Info ("Starting listener...")
+                log LogLevel.Information "Starting listener..."
                 listener.Value.Start ()
                 isStarted <- true
                 asyncStartConnecting listener.Value asyncOnConnected |> Async.StartImmediate
-                Logger.Info ("Listener started")
+                log LogLevel.Information "Listener started"
         
                 match tlsRedirectListener with
                 | Some listener ->
-                    Logger.Info ("Starting HTTP redirection listener...")
+                    log LogLevel.Information "Starting HTTP redirection listener..."
                     listener.Start ()
                     asyncStartConnecting listener asyncOnTlsRedirect |> Async.StartImmediate
-                    Logger.Info ("HTTPS redirection listener started")
+                    log LogLevel.Information "HTTPS redirection listener started"
                 | None -> ()
 
-                Logger.Info "Web Server started"
+                log LogLevel.Information "Web Server started"
             with 
             | :? SocketException as se when se.SocketErrorCode <> SocketError.AddressAlreadyInUse ->
                 raise se
             | e ->
-                Logger.Warning (sprintf "Could not start HTTP Listener: %A" e)
+                log LogLevel.Warning (sprintf "Could not start HTTP Listener: %A" e)
                 isStarted <- false
 
     let Stop () =
         if not isStarted then
             try
-                Logger.Info ("Terminating managed extensions...")
+                log LogLevel.Information "Terminating managed extensions..."
 
                 //let tasks = 
                 //    Settings.Current.Extensions
@@ -253,21 +255,21 @@ module Server =
                 //..Extensions .Select(n => n.ShutdownAsync());
                 //Task.WhenAll(tasks.ToArray()).Synchronize();
 
-                Logger.Info ("Managed extensions terminated")
+                log LogLevel.Information "Managed extensions terminated"
 
                 isStarted <- false
 
                 match listener with
                     | Some value ->
-                        Logger.Info ("Stopping listener...")
+                        log LogLevel.Information "Stopping listener..."
                         value.Stop ()
-                        Logger.Info ("Listener stopped")
+                        log LogLevel.Information "Listener stopped"
                     | None -> ()
                 
                 match tlsRedirectListener with
                     | Some value ->
-                        Logger.Info ("Stopping HTTPS redirection listener...")
+                        log LogLevel.Information "Stopping HTTPS redirection listener..."
                         value.Stop ()
-                        Logger.Info ("HTTPS redirection listener stopped")
+                        log LogLevel.Information "HTTPS redirection listener stopped"
                     | None -> ()
-            with e -> Logger.Warning (sprintf "Could not stop web server: %A" e)
+            with e -> log LogLevel.Warning (sprintf "Could not stop web server: %A" e)
