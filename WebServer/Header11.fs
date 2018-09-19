@@ -1,4 +1,5 @@
 namespace WebServer
+open ActivePatterns
 open System
 
 module Header11 = 
@@ -18,12 +19,20 @@ module Header11 =
                 | _ -> failwith "Unknown HTTP Method"
 
         let startIndex = headerParts.[0].IndexOf (' ') + 1
-        let path = headerParts.[0].Substring(startIndex, headerParts.[0].IndexOf(" HTTP") - startIndex)
+        let path = headerParts.[0].Substring (startIndex, headerParts.[0].IndexOf(" HTTP") - startIndex)
+        
+        let startIndex = headerParts.[0].IndexOf (' ', startIndex) + 1
+        let httpVersion = 
+            match headerParts.[0].Substring startIndex with
+            | InvariantEqual "HTTP/1.0" -> HttpVersion.Http1
+            | InvariantEqual "HTTP/1.1" -> HttpVersion.Http11
+            | _ -> failwith "Unknown HTTP protocol"
 
         let getHeaderValue headerKey = 
             match headerKey with
             | HeaderKey.Method -> method :> obj
             | HeaderKey.Path -> path :> obj
+            | HeaderKey.HttpVersion -> httpVersion :> obj
             | HeaderKey.IfModifiedSince -> "" :> obj
             | _ -> failwith "Unknown header key"
 

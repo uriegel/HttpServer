@@ -10,8 +10,10 @@ module RequestSession =
         let mutable headerTableSize = 0
         let mutable windowUpdate = 0
 
-        let log = Logger.log (string socketSessionId)
-        let lowTrace = Logger.lowTrace (string socketSessionId)
+        let logger = {
+            log = Logger.log (string socketSessionId)
+            lowTrace = Logger.lowTrace (string socketSessionId)
+        }
 
         let asyncReadFrame () = 
             async {
@@ -50,14 +52,14 @@ module RequestSession =
 
         let rec asyncReadNextFrame () = 
             async {
-                lowTrace (fun () -> "Reading next frame")
+                logger.lowTrace (fun () -> "Reading next frame")
                 let! frame = asyncReadFrame ()
 
                 match frame with 
                 | :? Headers as headers -> 
                     let flags = headers.Flags
                     use headerStream = headers.Stream
-                    lowTrace (fun () -> sprintf "%d - Headers, E: %A, flags: %A, weight: %d" headers.StreamId headers.E headers.Flags headers.Weight)
+                    logger.lowTrace (fun () -> sprintf "%d - Headers, E: %A, flags: %A, weight: %d" headers.StreamId headers.E headers.Flags headers.Weight)
                     // TODO: Type Decoder in session, set properties like HEADER_TABLE_SIZE
                     //let headerFields = HPack.decode headerStream
                     //do! asyncProcessRequest headers.StreamId headerFields
@@ -66,15 +68,15 @@ module RequestSession =
                     match settings.Values.TryFind(SettingsIdentifier.HEADER_TABLE_SIZE) with 
                     | Some hts -> headerTableSize <- hts
                     | None -> ()
-                    lowTrace (fun () -> sprintf "Settings: HeaderTableSize: %d" headerTableSize)
+                    logger.lowTrace (fun () -> sprintf "Settings: HeaderTableSize: %d" headerTableSize)
                     let ack = Settings.createAck settings.StreamId
                     do! asyncSendFrame ack
                 | :? WindowUpdate as windowUpdateFrame -> 
                     windowUpdate <- windowUpdate + windowUpdateFrame.SizeIncrement
-                    lowTrace (fun () -> sprintf "Window update: %d" windowUpdate)
-                | :? RstStream as rstStream -> lowTrace (fun () -> sprintf "Reset stream, Error: %d" rstStream.Error)
+                    logger.lowTrace (fun () -> sprintf "Window update: %d" windowUpdate)
+                | :? RstStream as rstStream -> logger.lowTrace (fun () -> sprintf "Reset stream, Error: %d" rstStream.Error)
                 | :? Ping as ping -> 
-                    lowTrace (fun () -> "ping received")
+                    logger.lowTrace (fun () -> "ping received")
                     do! asyncSendFrame <| ping.createAck ()
                 | _ -> failwith (sprintf "type not supported: %A" frame.Type)
                 do! asyncReadNextFrame ()

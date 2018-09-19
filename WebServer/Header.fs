@@ -5,7 +5,13 @@ open System
 type HeaderKey =
     Method = 0
     | Path = 1
-    | IfModifiedSince = 2
+    | HttpVersion = 2
+    | IfModifiedSince = 3
+
+type HttpVersion = 
+    | Http1 = 0
+    | Http11 = 1
+    | Http2 = 2
 
 type Method =
     Get = 0

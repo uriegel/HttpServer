@@ -5,7 +5,6 @@ open System.Collections.Concurrent
 open System.Threading
 open Microsoft.Extensions.Logging
 
-
 type LogItem = {
     LogLevel: LogLevel
     text: string

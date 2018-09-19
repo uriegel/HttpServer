@@ -27,14 +27,22 @@ module Request11Session =
 
         async {
             let id = initialize socketSessionId
+
+            let logger = {
+                log = Logger.log id
+                lowTrace = Logger.lowTrace id
+            }
+
             let! (headerString, alreadyRead) = readHeader 0
             let headers = Header11.createHeaderAccess headerString
-            //Request.asyncProcess
+            RequestProcessing.asyncProcess {
+                remoteEndPoint = null
+                isSecure = false
+                categoryLogger = logger
+                header = headers
+            }
             
-            // TODO: Nimm ein Request-Object und übergib headers und payloadAccess
             // TODO: TLS-Redirect als Option, aber ACME für Certbot priorisieren
-            let path = headers HeaderKey.Path
-            let method = headers HeaderKey.Method
             ()
         }
 
