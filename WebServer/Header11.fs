@@ -33,6 +33,7 @@ module Header11 =
             | HeaderKey.Method -> method :> obj
             | HeaderKey.Path -> path :> obj
             | HeaderKey.HttpVersion -> httpVersion :> obj
+            // TODO: Memoization
             | HeaderKey.IfModifiedSince -> "" :> obj
             | _ -> failwith "Unknown header key"
 

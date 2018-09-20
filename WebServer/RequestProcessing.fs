@@ -14,3 +14,6 @@ module RequestProcessing =
             (string (request.header HeaderKey.Method)) (string (request.header HeaderKey.Path)) 
             (httpVersionToString (request.header HeaderKey.HttpVersion :?> HttpVersion ))
             (if socketSession.isSecure then "" else " not secure"))
+        
+        match request.header HeaderKey.Path with
+        | _ -> Files.serve request
