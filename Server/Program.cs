@@ -21,9 +21,9 @@ namespace Server
                 //Webroot = @"..\..\..\..\..\SuperfitUI\dist\superfitui",
                 Webroot = @"C:\Program Files\caesar\CAEWebSrv\web",
                 IsTlsEnabled = true,
-                TlsPort = 4433,
+                //TlsPort = 4433,
                 //Http2 = true,
-                // CertificateName = "CAESAR",
+                CertificateName = "CAESAR",
                 //DomainName = "riegel.selfhost.eu",
                 DomainName = "cas-ws121013.caseris.intern",
                 TlsRedirect = true
@@ -35,22 +35,22 @@ namespace Server
 
             // C#
 
-            var configuration = new Configuration
-            {
-                //Webroot = @"..\..\..\..\..\SuperfitUI\dist\superfitui",
-//                Webroot = @"C:\Program Files\caesar\CAEWebSrv\web",
-                IsTlsEnabled = true,
-                TlsPort = 443,
-                Port = 80,
-//                Certificate = certificate,
-  //              HTTP2 = true
-            };
-            var server = new HttpServer.Server(configuration);
-            server.Start();
-            Console.WriteLine("Press any key to stop...");
-            Console.ReadLine();
-            server.Stop();
-            Console.ReadLine();
+//             var configuration = new Configuration
+//             {
+//                 //Webroot = @"..\..\..\..\..\SuperfitUI\dist\superfitui",
+// //                Webroot = @"C:\Program Files\caesar\CAEWebSrv\web",
+//                 IsTlsEnabled = true,
+//                 TlsPort = 443,
+//                 Port = 80,
+// //                Certificate = certificate,
+//   //              HTTP2 = true
+//             };
+//             var server = new HttpServer.Server(configuration);
+//             server.Start();
+//             Console.WriteLine("Press any key to stop...");
+//             Console.ReadLine();
+//             server.Stop();
+//             Console.ReadLine();
         }
     }
 }

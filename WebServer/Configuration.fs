@@ -19,13 +19,11 @@ type ConfigurationData = {
     Port: int
     TlsPort: int
     IsTlsEnabled: bool
-    TlsTracing: bool
     TlsRedirect: bool
     Http2: bool
     Certificate: X509Certificate2 Option
     CheckRevocation: bool
     //member val  public string[] AppCaches { get; set; }
-    CertificateName: string
     HstsDurationInSeconds: int
     XFrameOptions: XFrameOptions
     TlsProtocols: SslProtocols
@@ -45,13 +43,11 @@ type Configuration() =
         Port = 80
         TlsPort = 443
         IsTlsEnabled = false
-        TlsTracing = false
         TlsRedirect = false
         Http2 = false
         Certificate = None
         CheckRevocation = false
         //member val  public string[] AppCaches { get; set; }
-        CertificateName = ""
         HstsDurationInSeconds = 0
         XFrameOptions = XFrameOptions.NotSet
         TlsProtocols = SslProtocols.Tls ||| SslProtocols.Tls11 ||| SslProtocols.Tls12

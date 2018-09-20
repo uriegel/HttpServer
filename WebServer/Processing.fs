@@ -8,6 +8,7 @@ open System
 open System.Net.Security
 open System.Security.Cryptography.X509Certificates
 open Microsoft.Extensions.Logging
+open System.Net
 
 module Processing = 
     let mutable private idSeed = 0
@@ -73,7 +74,14 @@ module Processing =
             try
                 let rec asyncReceive () = 
                     async {
-                        if http2 then do! RequestSession.asyncStart id networkStream else do! Request11Session.asyncStart id networkStream
+                        if http2 then 
+                            do! RequestSession.asyncStart id networkStream 
+                        else 
+                            do! Request11Session.asyncStart {
+                                    id = id
+                                    remoteEndPoint = tcpClient.Client.RemoteEndPoint :?> IPEndPoint
+                                    isSecure = true
+                                } networkStream
                         return! asyncReceive ()
                     }
         

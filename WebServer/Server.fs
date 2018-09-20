@@ -25,7 +25,6 @@ type InitializationData() =
     member val Port = 80 with get, set 
     member val TlsPort = 443 with get, set 
     member val IsTlsEnabled = false with get, set 
-    member val TlsTracing = false with get, set 
     member val TlsRedirect = false with get, set 
     member val Http2 = false with get, set 
     member val Certificate: X509Certificate2 = null with get, set 
@@ -34,7 +33,8 @@ type InitializationData() =
 
     //member val  public string[] AppCaches { get; set; }
 
-    member val CertificateName = "URIEGEL" with get, set 
+    // TODO: option
+    member val CertificateName = null with get, set 
     member val HstsDurationInSeconds = 0 with get, set 
     member val XFrameOptions = XFrameOptions.NotSet with get, set 
 
@@ -59,7 +59,7 @@ module Server =
     
     let mutable private isStarted = false
     let mutable private listener: TcpListener Option = None
-    let mutable private tlsRedirectListener: TcpListener Option = None
+    let mutable private tlsListener: TcpListener Option = None
 
     let rec private asyncStartConnecting (listener: TcpListener) onConnected = 
         async {
@@ -97,6 +97,11 @@ module Server =
                 | e when isStarted -> log LogLevel.Error (sprintf "Error in onTlsRedirect occurred: %A" e)
         }
 
+    let createListener port = 
+        let listener = Ipv6TcpListenerFactory.create port
+        if not listener.Ipv6 then log LogLevel.Information "IPv6 or IPv6 dual mode not supported, switching to IPv4"
+        listener.Listener
+
     let Start (configuration: InitializationData) = 
         if not isStarted then
             try
@@ -114,24 +119,7 @@ module Server =
                                 |> Seq.tryItem 0
                             match certificate with
                             | Some value -> Some value
-                            | None ->
-                                let certificateFile = @"c:\users\urieg\desktop\Riegel.selfhost.eu.pfx"
-                                //var certificateFile = @"d:\test\Riegel.selfhost.eu.pfx";
-                                //var certificateFile = @"d:\test\zert.pfx";
-                                //var certificateFile = @"d:\test\zertOhneAntragsteller.pfx";
-
-                                //var certificateFile = @"D:\OpenSSL\bin\affe\key.pem";
-                                let beits = Array.zeroCreate (int (FileInfo certificateFile).Length)
-                                use file = File.OpenRead certificateFile
-                                file.Read (beits, 0, beits.Length) |> ignore
-                                Some (new X509Certificate2 (beits, "caesar"))
-                                //var userName = System.Security.Principal.WindowsIdentity.GetCurrent().Name;
-                                //Logger.Current.Info($"Searching in current user store: {userName}");
-                                //store = new X509Store(StoreLocation.CurrentUser);
-                                //store.Open(OpenFlags.ReadOnly);
-                                //Configuration.Certificate = store.Certificates.Cast<X509Certificate2>().Where(n => n.FriendlyName == Configuration.CertificateName).FirstOrDefault();
-                                //if (Configuration.Certificate != null)
-                                //    Logger.Current.Info($"Using certificate from current user store: {userName}");
+                            | None -> None
                         | _ -> Some configuration.Certificate
                     | false -> None
 
@@ -155,13 +143,15 @@ module Server =
                     Port = if configuration.Port > 0 then configuration.Port else 80
                     TlsPort = if configuration.TlsPort> 0 then configuration.TlsPort else 443
                     IsTlsEnabled = configuration.IsTlsEnabled
-                    TlsTracing = configuration.TlsTracing
                     TlsRedirect = configuration.TlsRedirect
                     Http2 = configuration.Http2
-                    Certificate = getCertificate ()
+                    Certificate = 
+                        if configuration.IsTlsEnabled then 
+                            getCertificate () 
+                        else 
+                            None
                     CheckRevocation = configuration.CheckRevocation
                     //member val  public string[] AppCaches { get; set; }
-                    CertificateName = configuration.CertificateName
                     HstsDurationInSeconds = configuration.HstsDurationInSeconds
                     XFrameOptions = configuration.XFrameOptions
                     TlsProtocols = configuration.TlsProtocols
@@ -181,61 +171,38 @@ module Server =
                 if Configuration.Current.LocalAddress <> IPAddress.Any then
                     log LogLevel.Information (sprintf "Binding to local address: %s" (Configuration.Current.LocalAddress.ToString ()))
         
-                let (l,tlsl) =
+                let (listen, tlsListen) =
                     if Configuration.Current.IsTlsEnabled then
-                        log LogLevel.Information (sprintf "Supported secure protocols: %A" configuration.TlsProtocols)
-
-                        match Configuration.Current.Certificate with
-                        | Some certificate -> log LogLevel.Information (sprintf "Using certificate %A" certificate)
-                        | None -> failwith (sprintf "No certificate with display name %A found" Configuration.Current.CertificateName)
-
-                        if Configuration.Current.CheckRevocation then 
-                            log LogLevel.Information "Checking revocation lists"
-            
-                        log LogLevel.Information (sprintf "Listening on secure port %d" Configuration.Current.TlsPort)
-                        let listener = Ipv6TcpListenerFactory.create configuration.TlsPort
-                        if not listener.Ipv6 then
-                            log LogLevel.Information ("IPv6 or IPv6 dual mode not supported, switching to IPv4")
-
-                        let tlsRedirectListener = 
-                            if configuration.TlsRedirect then
-                                log LogLevel.Information "Initializing TLS redirect"
-                                let listener = Ipv6TcpListenerFactory.create configuration.Port
-                                if not listener.Ipv6 then 
-                                    log LogLevel.Information "IPv6 or IPv6 dual mode not supported, switching to IPv4"
-                                Some listener
-                            else
-                                None
-
-                        log LogLevel.Information "TLS initialized"
-                        (listener, tlsRedirectListener)
+                        (configuration.TlsRedirect, true)
                     else
-                        log LogLevel.Information (sprintf "Listening on port %d" configuration.Port)
-                        let listener = Ipv6TcpListenerFactory.create configuration.Port
-                        if not listener.Ipv6 then 
-                            log LogLevel.Information "IPv6 or IPv6 dual mode not supported, switching to IPv4"
-                        (listener, None)
-                 
-                listener <- Some l.Listener
-                tlsRedirectListener <- 
-                    match tlsl with 
-                        | Some value -> Some value.Listener
-                        | None -> None
+                        (true, false)
 
-                log LogLevel.Information "Starting listener..."
-                listener.Value.Start ()
+                if Configuration.Current.IsTlsEnabled then
+                    log LogLevel.Information (sprintf "Supported secure protocols: %A" configuration.TlsProtocols)
+
+                    match Configuration.Current.Certificate with
+                    | Some certificate -> log LogLevel.Information (sprintf "Using certificate %A" certificate)
+                    | None when (configuration.CertificateName <> null)
+                         -> failwith (sprintf "No certificate with display name %A found" configuration.CertificateName)
+                    | None -> failwith "No certificate specified"
+
+                    if Configuration.Current.CheckRevocation then 
+                        log LogLevel.Information "Checking revocation lists"
+
+                log LogLevel.Information "Starting listener(s)..."
+                if listen then 
+                    log LogLevel.Information (sprintf "Starting listener on port %d" configuration.Port)
+                    listener <- Some (createListener configuration.Port)
+                    listener.Value.Start ()
+                    asyncStartConnecting listener.Value asyncOnConnected |> Async.StartImmediate
+                if tlsListen then 
+                    log LogLevel.Information (sprintf "Starting secure listener on port %d" configuration.TlsPort)
+                    tlsListener <- Some (createListener configuration.TlsPort)
+                    tlsListener.Value.Start ()
+                    asyncStartConnecting tlsListener.Value asyncOnConnected |> Async.StartImmediate
+                
+                log LogLevel.Information "Listener(s) started"
                 isStarted <- true
-                asyncStartConnecting listener.Value asyncOnConnected |> Async.StartImmediate
-                log LogLevel.Information "Listener started"
-        
-                match tlsRedirectListener with
-                | Some listener ->
-                    log LogLevel.Information "Starting HTTP redirection listener..."
-                    listener.Start ()
-                    asyncStartConnecting listener asyncOnTlsRedirect |> Async.StartImmediate
-                    log LogLevel.Information "HTTPS redirection listener started"
-                | None -> ()
-
                 log LogLevel.Information "Web Server started"
             with 
             | :? SocketException as se when se.SocketErrorCode <> SocketError.AddressAlreadyInUse ->
@@ -243,7 +210,6 @@ module Server =
             | e ->
                 log LogLevel.Warning (sprintf "Could not start HTTP Listener: %A" e)
                 isStarted <- false
-
     let Stop () =
         if not isStarted then
             try
@@ -266,10 +232,10 @@ module Server =
                         log LogLevel.Information "Listener stopped"
                     | None -> ()
                 
-                match tlsRedirectListener with
+                match tlsListener with
                     | Some value ->
-                        log LogLevel.Information "Stopping HTTPS redirection listener..."
+                        log LogLevel.Information "Stopping HTTPS listener..."
                         value.Stop ()
-                        log LogLevel.Information "HTTPS redirection listener stopped"
+                        log LogLevel.Information "HTTPS listener stopped"
                     | None -> ()
             with e -> log LogLevel.Warning (sprintf "Could not stop web server: %A" e)

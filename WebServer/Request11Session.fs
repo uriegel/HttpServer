@@ -13,7 +13,7 @@ module Request11Session =
 
     let headerBytes = Array.zeroCreate 20000
 
-    let asyncStart socketSessionId (networkStream: Stream) =
+    let asyncStart socketSession (networkStream: Stream) =
         let rec readHeader alreadyRead =
             async {
                 let! read = networkStream.AsyncRead (headerBytes, alreadyRead, headerBytes.Length - alreadyRead)
@@ -26,7 +26,7 @@ module Request11Session =
             }
 
         async {
-            let id = initialize socketSessionId
+            let id = initialize socketSession.id
 
             let logger = {
                 log = Logger.log id
@@ -35,10 +35,7 @@ module Request11Session =
 
             let! (headerString, alreadyRead) = readHeader 0
             let headers = Header11.createHeaderAccess headerString
-            RequestProcessing.asyncProcess {
-                remoteEndPoint = null
-                isSecure = false
-            } {
+            RequestProcessing.asyncProcess socketSession {
                 categoryLogger = logger
                 header = headers
             }
