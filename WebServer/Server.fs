@@ -33,7 +33,6 @@ type InitializationData() =
 
     //member val  public string[] AppCaches { get; set; }
 
-    // TODO: option
     member val CertificateName = null with get, set 
     member val HstsDurationInSeconds = 0 with get, set 
     member val XFrameOptions = XFrameOptions.NotSet with get, set 
@@ -61,40 +60,26 @@ module Server =
     let mutable private listener: TcpListener Option = None
     let mutable private tlsListener: TcpListener Option = None
 
-    let rec private asyncStartConnecting (listener: TcpListener) onConnected = 
-        async {
-            if isStarted then
-                try 
-                    let! client = listener.AcceptTcpClientAsync () |> Async.AwaitTask
-                    asyncStartConnecting listener onConnected |> Async.StartImmediate
-                    onConnected client |> Async.StartImmediate
-                with 
-                | :? SocketException as se when se.SocketErrorCode = SocketError.Interrupted && not isStarted -> ()
-                | e -> log LogLevel.Error (sprintf "Error occurred in connecting thread: %A" e)
-        }
-
-    let private asyncOnConnected (tcpClient: TcpClient) =
+    let private asyncOnConnected (tcpClient: TcpClient) isSecure =
         async {
             if isStarted then
                 try
-                    do! Processing.asyncStartReceiving tcpClient 
+                    do! Processing.asyncStartReceiving tcpClient isSecure 
                 with 
                 | :? SocketException as se when se.NativeErrorCode = 10054 -> ()
                 | :? ObjectDisposedException -> ()  // Stop() aufgerufen 
                 | e when isStarted -> log LogLevel.Error (sprintf "Error in OnConnected occurred: %A" e)
         }
-        
-    let private asyncOnTlsRedirect (tcpClient: TcpClient) =
+    let rec private asyncStartConnecting (listener: TcpListener) isSecure = 
         async {
             if isStarted then
-                try
-                    ()
-                    // TODO: Header HTTP 1.1 auslesen, dann 301 senden
-                    //SocketSession.StartReceiving(this, tcpClient, isSecured);
+                try 
+                    let! client = listener.AcceptTcpClientAsync () |> Async.AwaitTask
+                    asyncStartConnecting listener isSecure |> Async.StartImmediate
+                    asyncOnConnected client isSecure |> Async.StartImmediate
                 with 
-                | :? SocketException as se when se.NativeErrorCode = 10054 -> ()
-                | :? ObjectDisposedException -> ()  // Stop() aufgerufen 
-                | e when isStarted -> log LogLevel.Error (sprintf "Error in onTlsRedirect occurred: %A" e)
+                | :? SocketException as se when se.SocketErrorCode = SocketError.Interrupted && not isStarted -> ()
+                | e -> log LogLevel.Error (sprintf "Error occurred in connecting thread: %A" e)
         }
 
     let createListener port = 
@@ -190,19 +175,19 @@ module Server =
                         log LogLevel.Information "Checking revocation lists"
 
                 log LogLevel.Information "Starting listener(s)..."
+                isStarted <- true
                 if listen then 
                     log LogLevel.Information (sprintf "Starting listener on port %d" configuration.Port)
                     listener <- Some (createListener configuration.Port)
                     listener.Value.Start ()
-                    asyncStartConnecting listener.Value asyncOnConnected |> Async.StartImmediate
+                    asyncStartConnecting listener.Value false |> Async.StartImmediate
                 if tlsListen then 
                     log LogLevel.Information (sprintf "Starting secure listener on port %d" configuration.TlsPort)
                     tlsListener <- Some (createListener configuration.TlsPort)
                     tlsListener.Value.Start ()
-                    asyncStartConnecting tlsListener.Value asyncOnConnected |> Async.StartImmediate
+                    asyncStartConnecting tlsListener.Value true |> Async.StartImmediate
                 
                 log LogLevel.Information "Listener(s) started"
-                isStarted <- true
                 log LogLevel.Information "Web Server started"
             with 
             | :? SocketException as se when se.SocketErrorCode <> SocketError.AddressAlreadyInUse ->

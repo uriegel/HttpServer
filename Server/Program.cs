@@ -26,7 +26,7 @@ namespace Server
                 CertificateName = "CAESAR",
                 //DomainName = "riegel.selfhost.eu",
                 DomainName = "cas-ws121013.caseris.intern",
-                TlsRedirect = true
+                //TlsRedirect = true
             };
             WebServer.Server.Start(newConfig);
             Console.WriteLine("Press any key to stop...");

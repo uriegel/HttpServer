@@ -13,7 +13,7 @@ open System.Net
 module Processing = 
     let mutable private idSeed = 0
 
-    let asyncStartReceiving (tcpClient: TcpClient) = 
+    let asyncStartReceiving (tcpClient: TcpClient) isSecure = 
         let id = Interlocked.Increment &idSeed
         let log = Logger.log (string id)
         let lowTrace = Logger.lowTrace (string id)
@@ -61,13 +61,13 @@ module Processing =
             }
         
         async {
-            lowTrace (fun () -> sprintf "New %ssocket session created: - %A" (if Configuration.Current.IsTlsEnabled then "secure " else "") tcpClient.Client.RemoteEndPoint)
+            lowTrace (fun () -> sprintf "New %ssocket session created: - %A" (if isSecure then "secure " else "") tcpClient.Client.RemoteEndPoint)
             // TODO: Counter erhöhen
             tcpClient.ReceiveTimeout <- Configuration.Current.SocketTimeout
             tcpClient.SendTimeout <- Configuration.Current.SocketTimeout
         
             let! (networkStream, http2) = 
-                if Configuration.Current.IsTlsEnabled then 
+                if isSecure then 
                     asyncGetTlsNetworkStream ()
                 else
                     async { return (tcpClient.GetStream () :> Stream, false) }
@@ -80,7 +80,7 @@ module Processing =
                             do! Request11Session.asyncStart {
                                     id = id
                                     remoteEndPoint = tcpClient.Client.RemoteEndPoint :?> IPEndPoint
-                                    isSecure = true
+                                    isSecure = isSecure
                                 } networkStream
                         return! asyncReceive ()
                     }
