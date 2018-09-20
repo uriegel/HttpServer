@@ -18,8 +18,25 @@ build for linux 32bit:
 
 ```dotnet publish -c Release -r linux-arm```
 
+access raspis folder:
+
+```
+mkdir pi
+sshfs pi@raspberrypi: pi
+```
+
 on Raspberry:
 ```
 sudo apt-get update
 sudo apt-get install curl libunwind8 gettext apt-transport-https
+```
+
+Now compile ```starter.c``` on raspi in folder ```publish```:
+```gcc starter.c -o starter```
+
+Start ```starter``` as sudo:
+```
+sudo bash
+cd /home/pi/publish
+./starter
 ```
