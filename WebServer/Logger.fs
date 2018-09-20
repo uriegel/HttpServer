@@ -7,7 +7,7 @@ module Logger =
     let mutable lowTraceEnabled = false
     let private loggerFactory = new LoggerFactory ()
     loggerFactory.AddProvider (new ConsoleLoggerProvider ())
-    //loggerFactory.AddDebug () |> ignore
+//    loggerFactory.AddDebug () |> ignore
     let private logger = loggerFactory.CreateLogger("WebServer")
     
     let log category logLevel text =

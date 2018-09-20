@@ -9,8 +9,8 @@ module RequestProcessing =
         | HttpVersion.Http2 -> "HTTP/2"
         | _ -> "HTTP??"
 
-    let asyncProcess request =
-        request.categoryLogger.log LogLevel.Trace (sprintf "Request: %A %s %s %s%s" request.remoteEndPoint 
+    let asyncProcess socketSession request =
+        request.categoryLogger.log LogLevel.Trace (sprintf "Request: %A %s %s %s%s" socketSession.remoteEndPoint 
             (string (request.header HeaderKey.Method)) (string (request.header HeaderKey.Path)) 
             (httpVersionToString (request.header HeaderKey.HttpVersion :?> HttpVersion ))
-            (if request.isSecure then "" else " not secure"))
+            (if socketSession.isSecure then "" else " not secure"))

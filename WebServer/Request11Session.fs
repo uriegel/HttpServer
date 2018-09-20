@@ -38,6 +38,7 @@ module Request11Session =
             RequestProcessing.asyncProcess {
                 remoteEndPoint = null
                 isSecure = false
+            } {
                 categoryLogger = logger
                 header = headers
             }

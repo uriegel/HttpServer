@@ -9,7 +9,7 @@ int main()
 {
     while (true)
     {
-        printf("Starting web servr\r\n");
+        printf("Starting web server\r\n");
         int status;
         switch(fork()) {
             case -1: 

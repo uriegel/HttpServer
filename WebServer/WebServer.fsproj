@@ -13,10 +13,11 @@
     <Compile Include="Header11.fs" />
     <Compile Include="Configuration.fs" />
     <Compile Include="Request.fs" />
+    <Compile Include="SocketSession.fs" />
     <Compile Include="RequestProcessing.fs" />
     <Compile Include="Request11Session.fs" />
     <Compile Include="RequestSession.fs" />
-    <Compile Include="SocketSession.fs" />
+    <Compile Include="Processing.fs" />
     <Compile Include="Server.fs" />
   </ItemGroup>
   <ItemGroup>
