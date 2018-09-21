@@ -16,4 +16,4 @@ module RequestProcessing =
             (if socketSession.isSecure then "" else " not secure"))
         
         match request.header HeaderKey.Path with
-        | _ -> Files.serve request
+        | _ -> FileSystem.serve request

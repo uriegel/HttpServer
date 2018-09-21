@@ -9,7 +9,11 @@
                 "build",
                 "${workspaceFolder}/Server/Server.csproj"
             ],
-            "problemMatcher": "$msCompile"
+            "problemMatcher": "$msCompile",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }            
         }
     ]
 }
