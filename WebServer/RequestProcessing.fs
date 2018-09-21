@@ -1,4 +1,5 @@
 namespace WebServer
+open FileSystem
 open Microsoft.Extensions.Logging
 
 module RequestProcessing =
@@ -15,5 +16,9 @@ module RequestProcessing =
             (httpVersionToString (request.header HeaderKey.HttpVersion :?> HttpVersion ))
             (if socketSession.isSecure then "" else " not secure"))
         
-        match request.header HeaderKey.Path with
-        | _ -> FileSystem.serve request
+        match request with
+        | IsFileSystem value -> serveFileSystem value
+        // TODO: 304 not found
+        // TODO: Redirection
+        // TODO: Serve file
+        | _ -> failwith "Unknown error"

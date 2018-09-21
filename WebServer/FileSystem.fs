@@ -5,7 +5,7 @@ open Microsoft.Extensions.Logging
 open ActivePatterns
 
 module FileSystem =
-    let (|CheckFile|_|) request = 
+    let (|IsFileSystem|_|) request = 
         let url = Uri.UnescapeDataString ((request.header HeaderKey.Path) :?> string)
         let (url, query) = 
             match url with
@@ -44,7 +44,7 @@ module FileSystem =
                 request.categoryLogger.log LogLevel.Warning warning
                 failwith warning
             match localFile with
-            | _ when path.Length = 0 -> 
+            | _ when relativePath.Length = 0 -> 
                 let path = Path.Combine (Configuration.Current.Webroot, "index.html")
                 if File.Exists path then
                     let redirection = 
@@ -69,7 +69,7 @@ module FileSystem =
 
         | None -> None
 
-    let serve request = 
+    let serveFileSystem request = 
             
 
         ()
