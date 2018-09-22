@@ -12,13 +12,12 @@ module RequestProcessing =
 
     let asyncProcess socketSession request =
         request.categoryLogger.log LogLevel.Trace (sprintf "Request: %A %s %s %s%s" socketSession.remoteEndPoint 
-            (string (request.header HeaderKey.Method)) (string (request.header HeaderKey.Path)) 
+            (string <| request.header HeaderKey.Method) (string <| request.header HeaderKey.Path) 
             (httpVersionToString (request.header HeaderKey.HttpVersion :?> HttpVersion ))
             (if socketSession.isSecure then "" else " not secure"))
         
         match request with
         | IsFileSystem value -> serveFileSystem value
-        // TODO: 304 not found
         // TODO: Redirection
         // TODO: Serve file
-        | _ -> failwith "Unknown error"
+        | _ -> FixedResponses.asyncSendNotFound socketSession request

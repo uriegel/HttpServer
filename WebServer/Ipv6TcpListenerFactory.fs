@@ -23,7 +23,7 @@ module Ipv6TcpListenerFactory =
         with 
         | :? SocketException as se when se.SocketErrorCode <> SocketError.AddressFamilyNotSupported ->
             raise se
-        | :? SocketException as se ->
+        | :? SocketException ->
             let result = {
                 Listener = TcpListener (IPAddress.Any, port)
                 Ipv6 = false

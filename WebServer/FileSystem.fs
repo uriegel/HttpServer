@@ -31,10 +31,10 @@ module FileSystem =
                 path
         let localFile =
             try
-                Some (Path.Combine (Configuration.Current.Webroot, relativePath))
+                Some <| Path.Combine (Configuration.Current.Webroot, relativePath)
             with 
             | e -> 
-                request.categoryLogger.log LogLevel.Trace (sprintf "Invalid path: %s, %A" path e)
+                request.categoryLogger.log LogLevel.Trace <| sprintf "Invalid path: %s, %A" path e
                 None
         match localFile with
         | Some localFile -> 
@@ -51,18 +51,18 @@ module FileSystem =
                         match query with
                         | Some value -> "/?" + value
                         | None -> "/"
-                    Some (Redirection redirection)
+                    Some <| Redirection redirection
                 else
                     None
-            | _ when File.Exists localFile -> Some (FileSystemType.File { Path = localFile; Query = query} )
+            | _ when File.Exists localFile -> Some <| FileSystemType.File { Path = localFile; Query = query} 
             | _ when Directory.Exists localFile ->
                 if not (url.EndsWith "/") then
-                    Some (Redirection (url + "/" + match query with | Some value -> "?" + value | None -> ""))
+                    Some <| Redirection (url + "/" + match query with | Some value -> "?" + value | None -> "")
                 else
                     // localFile = Path.Combine(localFile, alias?.DefaultFile ?? "index.html");
                     let localFile = Path.Combine (localFile, "index.html")
                     if File.Exists localFile then
-                        Some (FileSystemType.File { Path = localFile; Query = query} )
+                        Some <| FileSystemType.File { Path = localFile; Query = query} 
                     else
                         None
             | _ -> None
@@ -70,6 +70,4 @@ module FileSystem =
         | None -> None
 
     let serveFileSystem request = 
-            
-
         ()

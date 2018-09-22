@@ -19,7 +19,7 @@ module Request11Session =
                 let! read = networkStream.AsyncRead (headerBytes, alreadyRead, headerBytes.Length - alreadyRead)
                 let alreadyRead = alreadyRead + read
                 let header = System.Text.Encoding.UTF8.GetString (headerBytes, 0, alreadyRead)
-                if header.Contains("\r\n\r\n") then
+                if header.Contains "\r\n\r\n" then
                     return (header, alreadyRead)
                 else
                     return! readHeader alreadyRead

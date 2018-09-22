@@ -7,6 +7,9 @@ type HeaderKey =
     | Path = 1
     | HttpVersion = 2
     | IfModifiedSince = 3
+    | Status404 = 4
+    | ContentLength = 5
+    | ContentType = 6
 
 type HttpVersion = 
     | Http1 = 0
@@ -24,3 +27,7 @@ type Method =
     | Trace = 7
     | Patch = 8
 
+type ResponseHeaderValue = {
+    key: HeaderKey
+    value: obj option
+}

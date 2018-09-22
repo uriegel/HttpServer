@@ -11,8 +11,8 @@ module RequestSession =
         let mutable windowUpdate = 0
 
         let logger = {
-            log = Logger.log (string socketSessionId)
-            lowTrace = Logger.lowTrace (string socketSessionId)
+            log = Logger.log <| string socketSessionId
+            lowTrace = Logger.lowTrace <| string socketSessionId
         }
 
         let asyncReadFrame () = 

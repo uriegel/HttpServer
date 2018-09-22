@@ -15,15 +15,15 @@ module Processing =
 
     let asyncStartReceiving (tcpClient: TcpClient) isSecure = 
         let id = Interlocked.Increment &idSeed
-        let log = Logger.log (string id)
-        let lowTrace = Logger.lowTrace (string id)
+        let log = Logger.log <| string id
+        let lowTrace = Logger.lowTrace <| string id
         
         let asyncGetTlsNetworkStream () =
             async {
                 let stream = tcpClient.GetStream ()
                 let sslStream = new SslStream (stream)
                 let authOptions = 
-                    new SslServerAuthenticationOptions(ApplicationProtocols = System.Collections.Generic.List<SslApplicationProtocol>(),
+                    new SslServerAuthenticationOptions (ApplicationProtocols = System.Collections.Generic.List<SslApplicationProtocol>(),
                         EnabledSslProtocols = SslProtocols.Tls12,
                         AllowRenegotiation = false,
                         CertificateRevocationCheckMode = 
@@ -88,15 +88,15 @@ module Processing =
                 do! asyncReceive () 
             with
             | :? AuthenticationException as e -> 
-                log LogLevel.Warning (sprintf "An authentication error has occurred while reading socket, session: %A, error: %A" tcpClient.Client.RemoteEndPoint e)
+                log LogLevel.Warning <| sprintf "An authentication error has occurred while reading socket, session: %A, error: %A" tcpClient.Client.RemoteEndPoint e
             | :? IOException
             // TODO
             //| :? ConnectionClosedException as e
             | :? SocketException as e ->
-                lowTrace (fun () -> sprintf "Closing socket session, reason: %A" e)
+                lowTrace <| fun () -> sprintf "Closing socket session, reason: %A" e
             | :? ObjectDisposedException ->
-                lowTrace (fun () -> "Object disposed")
-            | e -> log LogLevel.Warning (sprintf "An error has occurred while reading socket, error: %A" e)
+                lowTrace <| fun () -> "Object disposed"
+            | e -> log LogLevel.Warning <| sprintf "An error has occurred while reading socket, error: %A" e
             tcpClient.Close ()
             // TODO: Counter erniedrigen
         }        
