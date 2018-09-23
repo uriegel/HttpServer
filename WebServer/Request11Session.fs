@@ -38,6 +38,7 @@ module Request11Session =
             let asyncSendBytes responseHeaders bytes = 
                 let responseHeaders = ResponseHeader.prepare headers responseHeaders
 
+                let headersToSerialize = responseHeaders |> Array.filter (fun n -> n.key <> HeaderKey.Status404)
        
                 // if (!headers.ContainsKey("Content-Length"))
                 //     headers["Connection"] = "close";
