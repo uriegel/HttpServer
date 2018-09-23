@@ -39,10 +39,18 @@ module Request11Session =
                 let responseHeaders = ResponseHeader.prepare headers responseHeaders
 
                 let headersToSerialize = responseHeaders |> Array.filter (fun n -> n.key <> HeaderKey.Status404)
-       
+
+                // TODO:
                 // if (!headers.ContainsKey("Content-Length"))
                 //     headers["Connection"] = "close";
 
+                let headerStrings = 
+                    headersToSerialize
+                    |> Array.map (fun n -> n.key.ToString () + ": " + n.value.ToString ())
+                let headerStrings = System.String.Join ("\r\n", headerStrings)
+                // TODO: Some eliminieren
+                // TODO: Date richtig formatieren
+                logger.log Microsoft.Extensions.Logging.LogLevel.Information headerStrings
                 ()
 
             RequestProcessing.asyncProcess socketSession {
