@@ -11,7 +11,7 @@ module FixedResponses =
             |] 
             |> Array.append headers
 
-        // TODO: request asyncSendStream headers responseBytes(payload)
+        request.asyncSendBytes headers responseBytes
         ()
     let asyncSendNotFound socketSession request =
         request.categoryLogger.lowTrace <| fun () -> "404 Not Found"

@@ -35,9 +35,14 @@ module Request11Session =
 
             let! (headerString, alreadyRead) = readHeader 0
             let headers = Header11.createHeaderAccess headerString
+
+            let asyncSendBytes responseHeaders bytes = 
+                ()
+
             RequestProcessing.asyncProcess socketSession {
                 categoryLogger = logger
                 header = headers
+                asyncSendBytes = asyncSendBytes
             }
             
             // TODO: TLS-Redirect als Option, aber ACME für Certbot priorisieren
