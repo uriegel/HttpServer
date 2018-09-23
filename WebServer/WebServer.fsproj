@@ -3,6 +3,7 @@
     <TargetFramework>netcoreapp2.1</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Constants.fs" />
     <Compile Include="ActivePattern.fs" />
     <Compile Include="Frame.fs" />
     <Compile Include="Ipv6TcpListenerFactory.fs" />
@@ -13,6 +14,7 @@
     <Compile Include="Header11.fs" />
     <Compile Include="Configuration.fs" />
     <Compile Include="Request.fs" />
+    <Compile Include="ResponseHeader.fs" />
     <Compile Include="SocketSession.fs" />
     <Compile Include="Html.fs" />
     <Compile Include="FileSystemType.fs" />

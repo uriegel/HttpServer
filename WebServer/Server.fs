@@ -137,7 +137,7 @@ module Server =
                             None
                     CheckRevocation = configuration.CheckRevocation
                     //member val  public string[] AppCaches { get; set; }
-                    HstsDurationInSeconds = configuration.HstsDurationInSeconds
+                    //HstsDurationInSeconds = configuration.HstsDurationInSeconds
                     XFrameOptions = configuration.XFrameOptions
                     TlsProtocols = configuration.TlsProtocols
                 }

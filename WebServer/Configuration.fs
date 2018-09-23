@@ -24,7 +24,7 @@ type ConfigurationData = {
     Certificate: X509Certificate2 Option
     CheckRevocation: bool
     //member val  public string[] AppCaches { get; set; }
-    HstsDurationInSeconds: int
+    //HstsDurationInSeconds: int // Not with LetsEncrypt
     XFrameOptions: XFrameOptions
     TlsProtocols: SslProtocols
 }
@@ -48,7 +48,7 @@ type Configuration() =
         Certificate = None
         CheckRevocation = false
         //member val  public string[] AppCaches { get; set; }
-        HstsDurationInSeconds = 0
+        // HstsDurationInSeconds = 0 // Not with LetsEncrypt
         XFrameOptions = XFrameOptions.NotSet
         TlsProtocols = SslProtocols.Tls ||| SslProtocols.Tls11 ||| SslProtocols.Tls12
     }

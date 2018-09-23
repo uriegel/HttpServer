@@ -2,7 +2,6 @@
 
 open System.IO
 open System.Threading
-open Microsoft.Extensions.Logging
 
 module Request11Session =
     let mutable private idSeed = 0
@@ -37,6 +36,12 @@ module Request11Session =
             let headers = Header11.createHeaderAccess headerString
 
             let asyncSendBytes responseHeaders bytes = 
+                let responseHeaders = ResponseHeader.prepare headers responseHeaders
+
+       
+                // if (!headers.ContainsKey("Content-Length"))
+                //     headers["Connection"] = "close";
+
                 ()
 
             RequestProcessing.asyncProcess socketSession {
@@ -48,4 +53,7 @@ module Request11Session =
             // TODO: TLS-Redirect als Option, aber ACME für Certbot priorisieren
             ()
         }
+
+
+
 

@@ -10,6 +10,9 @@ type HeaderKey =
     | Status404 = 4
     | ContentLength = 5
     | ContentType = 6
+    | Date = 7
+    | Server = 8
+    | XFrameOptions = 9 //X-Frame-Options
 
 type HttpVersion = 
     | Http1 = 0

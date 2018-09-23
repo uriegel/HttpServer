@@ -2,7 +2,7 @@ namespace WebServer
 open System.Text
 
 module FixedResponses =
-    let asyncSend socketSession request (headers: ResponseHeaderValue[]) (html: string) = 
+    let asyncSend socketSession request headers (html: string) = 
         let responseBytes = Encoding.UTF8.GetBytes html
         let headers = 
             [|  
