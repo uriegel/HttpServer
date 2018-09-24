@@ -21,7 +21,9 @@ module RequestProcessing =
             // TODO: TLS-Redirect als Option, aber ACME für Certbot priorisieren
             | IsTlsRedirect value -> 
                 do! FixedResponses.asyncSendMovedPermanently socketSession request 
-                        ("https://" + Configuration.Current.DomainName + (request.header HeaderKey.Path :?> string))
+                        ("https://" + Configuration.Current.DomainName + 
+                        (if Configuration.Current.TlsPort = 443 then "" else sprintf ":%d" Configuration.Current.TlsPort) + 
+                        (request.header HeaderKey.Path :?> string))
             | IsFileSystem value -> serveFileSystem value
             // TODO: Redirection
             // TODO: Serve file
