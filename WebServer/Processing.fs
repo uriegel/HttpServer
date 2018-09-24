@@ -74,15 +74,17 @@ module Processing =
             try
                 let rec asyncReceive () = 
                     async {
-                        if http2 then 
-                            do! RequestSession.asyncStart id networkStream 
-                        else 
-                            do! Request11Session.asyncStart {
+                        let! result = 
+                            if http2 then 
+                                RequestSession.asyncStart id networkStream 
+                            else 
+                                Request11Session.asyncStart {
                                     id = id
                                     remoteEndPoint = tcpClient.Client.RemoteEndPoint :?> IPEndPoint
                                     isSecure = isSecure
                                 } networkStream
-                        return! asyncReceive ()
+                        if result then
+                            return! asyncReceive ()
                     }
         
                 do! asyncReceive () 

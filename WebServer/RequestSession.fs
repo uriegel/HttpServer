@@ -86,4 +86,5 @@ module RequestSession =
             let! magicBytes = networkStream.AsyncRead MAGIC.Length
             if magicBytes.[0] <> 80uy || magicBytes.[MAGIC.Length-1] <> 10uy then failwith "http2 magic prefix missing"
             do! asyncReadNextFrame () 
+            return true
         }
