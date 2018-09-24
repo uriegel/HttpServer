@@ -3,21 +3,16 @@ open FileSystem
 open Microsoft.Extensions.Logging
 
 module RequestProcessing =
-    let private httpVersionToString httpVersion =
-        match httpVersion with
-        | HttpVersion.Http1 -> "HTTP/1.0"
-        | HttpVersion.Http11 -> "HTTP/1.1"
-        | HttpVersion.Http2 -> "HTTP/2"
-        | _ -> "HTTP??"
-
     let asyncProcess socketSession request =
-        request.categoryLogger.log LogLevel.Trace (sprintf "Request: %A %s %s %s%s" socketSession.remoteEndPoint 
-            (string <| request.header HeaderKey.Method) (string <| request.header HeaderKey.Path) 
-            (httpVersionToString (request.header HeaderKey.HttpVersion :?> HttpVersion ))
-            (if socketSession.isSecure then "" else " not secure"))
-        
-        match request with
-        | IsFileSystem value -> serveFileSystem value
-        // TODO: Redirection
-        // TODO: Serve file
-        | _ -> FixedResponses.asyncSendNotFound socketSession request
+        async {
+            request.categoryLogger.log LogLevel.Trace (sprintf "Request: %A %s %s %s%s" socketSession.remoteEndPoint 
+                (string <| request.header HeaderKey.Method) (request.header HeaderKey.Path :?> string) 
+                (Header.getHttpVersionAsString (request.header HeaderKey.HttpVersion :?> HttpVersion ))
+                (if socketSession.isSecure then "" else " not secure"))
+            
+            match request with
+            | IsFileSystem value -> serveFileSystem value
+            // TODO: Redirection
+            // TODO: Serve file
+            | _ -> do! FixedResponses.asyncSendNotFound socketSession request
+        }

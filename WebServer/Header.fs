@@ -34,3 +34,11 @@ type ResponseHeaderValue = {
     key: HeaderKey
     value: obj option
 }
+
+module Header = 
+    let getHttpVersionAsString httpVersion =
+        match httpVersion with
+        | HttpVersion.Http1 -> "HTTP/1.0"
+        | HttpVersion.Http11 -> "HTTP/1.1"
+        | HttpVersion.Http2 -> "HTTP/2"
+        | _ -> "HTTP??"

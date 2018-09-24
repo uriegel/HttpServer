@@ -2,6 +2,8 @@
 
 open System.IO
 open System.Threading
+open System
+open System.Text
 
 module Request11Session =
     let mutable private idSeed = 0
@@ -36,31 +38,42 @@ module Request11Session =
             let headers = Header11.createHeaderAccess headerString
 
             let asyncSendBytes responseHeaders bytes = 
-                let responseHeaders = ResponseHeader.prepare headers responseHeaders
+                async {
+                    let responseHeaders = ResponseHeader.prepare headers responseHeaders
 
-                let headersToSerialize = responseHeaders |> Array.filter (fun n -> n.key <> HeaderKey.Status404)
+                    let headersToSerialize = responseHeaders |> Array.filter (fun n -> n.key <> HeaderKey.Status404)
 
-                // TODO:
-                // if (!headers.ContainsKey("Content-Length"))
-                //     headers["Connection"] = "close";
+                    // TODO:
+                    // if (!headers.ContainsKey("Content-Length"))
+                    //     headers["Connection"] = "close";
 
-                let headerStrings = 
-                    headersToSerialize
-                    |> Array.map (fun n -> n.key.ToString () + ": " + n.value.ToString ())
-                let headerStrings = System.String.Join ("\r\n", headerStrings)
-                // TODO: Some eliminieren
-                // TODO: Date richtig formatieren
-                logger.log Microsoft.Extensions.Logging.LogLevel.Information headerStrings
-                ()
+                    let createHeaderStringValue responseHeaderValue = 
+                        let value = 
+                            match responseHeaderValue.value with
+                            | Some value ->
+                                match value with    
+                                | :? string as value -> value
+                                | :? int as value -> value.ToString ()
+                                | :? DateTime as value -> value.ToString "R"
+                                | _ -> failwith "Wrong value type"
+                            | None -> failwith "No value"
+                        responseHeaderValue.key.ToString () + ": " + value
 
-            RequestProcessing.asyncProcess socketSession {
+                    let headerStrings = headersToSerialize |> Array.map createHeaderStringValue
+                    let headerString = Header.getHttpVersionAsString (headers HeaderKey.HttpVersion :?> HttpVersion) + " " + "\r\n" 
+                                        + System.String.Join ("\r\n", headerStrings)
+                    let headeryBytes = Encoding.UTF8.GetBytes headerString
+                    do! networkStream.AsyncWrite (headeryBytes, 0, headeryBytes.Length)
+                    do! networkStream.AsyncWrite (bytes, 0, bytes.Length)
+                }
+
+            do! RequestProcessing.asyncProcess socketSession {
                 categoryLogger = logger
                 header = headers
                 asyncSendBytes = asyncSendBytes
             }
             
             // TODO: TLS-Redirect als Option, aber ACME für Certbot priorisieren
-            ()
         }
 
 

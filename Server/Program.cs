@@ -18,15 +18,15 @@ namespace Server
             WebServer.Logger.lowTraceEnabled = true;
             var newConfig = new WebServer.InitializationData
             {
-                Webroot = @"C:\Users\urieg\source\repos\ingorico\ingorico",
-                //Webroot = @"C:\Program Files\caesar\CAEWebSrv\web",
+                // Webroot = @"C:\Users\urieg\source\repos\ingorico\ingorico",
+                Webroot = @"C:\Program Files\caesar\CAEWebSrv\web",
                 IsTlsEnabled = true,
-                TlsPort = 4433,
+                //TlsPort = 4433,
                 //Http2 = true,
-                //CertificateName = "CAESAR",
-                Certificate = certificate,
-                DomainName = "uriegel.de",
-                // DomainName = "cas-ws121013.caseris.intern",
+                CertificateName = "CAESAR",
+                //Certificate = certificate,
+                //DomainName = "uriegel.de",
+                DomainName = "cas-ws121013.caseris.intern",
                 //TlsRedirect = true
             };
             WebServer.Server.Start(newConfig);

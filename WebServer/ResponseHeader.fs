@@ -5,7 +5,7 @@ open System.Collections.Generic
 module ResponseHeader =
     let prepare requestHeaders (responseheaders: ResponseHeaderValue[]) =
         let headerList = new List<ResponseHeaderValue>()
-        headerList.Add { key = HeaderKey.Date; value = Some ((DateTime.Now.ToUniversalTime ()).ToString "R" :> obj) }
+        headerList.Add { key = HeaderKey.Date; value = Some (DateTime.Now.ToUniversalTime () :> obj) }
         headerList.Add { key = HeaderKey.Server; value = Some (Constants.server :> obj) }
         if Configuration.Current.XFrameOptions <> XFrameOptions.NotSet then
             headerList.Add { key = HeaderKey.XFrameOptions; value = Some (Configuration.Current.XFrameOptions.ToString () :> obj) }
