@@ -22,7 +22,7 @@ module Request11Session =
                 |> Array.tryFind  (fun n -> n.key = value)
 
             if found.IsSome then 
-                Some "404 Not found"
+                Some true
             else
                 None 
 
@@ -52,7 +52,8 @@ module Request11Session =
                 async {
                     let responseHeaders = ResponseHeader.prepare headers responseHeaders
 
-                    let headersToSerialize = responseHeaders |> Array.filter (fun n -> n.key <> HeaderKey.Status404)
+                    let headersToSerialize = responseHeaders |> Array.filter (fun n -> n.key <> HeaderKey.Status404
+                                                                                    && n.key <> HeaderKey.Status301)
 
                     // TODO:
                     // if (!headers.ContainsKey("Content-Length"))
@@ -77,7 +78,8 @@ module Request11Session =
 
                     let createStatus () = 
                         match responseHeaders with
-                            | IsStatus HeaderKey.Status404 value -> value
+                            | IsStatus HeaderKey.Status404 _ -> "404 Not found"
+                            | IsStatus HeaderKey.Status301 _ -> "301 Moved Permanently"
                             | _ -> failwith "No status"
 
                     let headerStrings = headersToSerialize |> Array.map createHeaderStringValue
@@ -93,8 +95,6 @@ module Request11Session =
                 header = headers
                 asyncSendBytes = asyncSendBytes
             }
-            
-            // TODO: TLS-Redirect als Option, aber ACME für Certbot priorisieren
         }
 
 
