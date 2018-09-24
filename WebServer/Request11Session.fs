@@ -15,6 +15,17 @@ module Request11Session =
     let headerBytes = Array.zeroCreate 20000
 
     let asyncStart socketSession (networkStream: Stream) =
+
+        let (|IsStatus|_|) value responseHeaders = 
+            let found = 
+                responseHeaders 
+                |> Array.tryFind  (fun n -> n.key = value)
+
+            if found.IsSome then 
+                Some "404 Not found"
+            else
+                None 
+
         let rec readHeader alreadyRead =
             async {
                 let! read = networkStream.AsyncRead (headerBytes, alreadyRead, headerBytes.Length - alreadyRead)
@@ -48,6 +59,11 @@ module Request11Session =
                     //     headers["Connection"] = "close";
 
                     let createHeaderStringValue responseHeaderValue = 
+                        let key = 
+                            match responseHeaderValue.key with
+                            | HeaderKey.ContentLength -> "Content-Length"
+                            | HeaderKey.ContentType -> "Content-Type"
+                            | _ -> responseHeaderValue.key.ToString ()
                         let value = 
                             match responseHeaderValue.value with
                             | Some value ->
@@ -57,13 +73,18 @@ module Request11Session =
                                 | :? DateTime as value -> value.ToString "R"
                                 | _ -> failwith "Wrong value type"
                             | None -> failwith "No value"
-                        responseHeaderValue.key.ToString () + ": " + value
+                        key + ": " + value
+
+                    let createStatus () = 
+                        match responseHeaders with
+                            | IsStatus HeaderKey.Status404 value -> value
+                            | _ -> failwith "No status"
 
                     let headerStrings = headersToSerialize |> Array.map createHeaderStringValue
-                    let headerString = Header.getHttpVersionAsString (headers HeaderKey.HttpVersion :?> HttpVersion) + " " + "\r\n" 
-                                        + System.String.Join ("\r\n", headerStrings)
-                    let headeryBytes = Encoding.UTF8.GetBytes headerString
-                    do! networkStream.AsyncWrite (headeryBytes, 0, headeryBytes.Length)
+                    let headerString = Header.getHttpVersionAsString (headers HeaderKey.HttpVersion :?> HttpVersion) + " " + (createStatus ()) + "\r\n" 
+                                        + System.String.Join ("\r\n", headerStrings) + "\r\n\r\n" 
+                    let headerBytes = Encoding.UTF8.GetBytes headerString
+                    do! networkStream.AsyncWrite (headerBytes, 0, headerBytes.Length)
                     do! networkStream.AsyncWrite (bytes, 0, bytes.Length)
                 }
 

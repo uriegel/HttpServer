@@ -15,7 +15,7 @@ module Html =
     h1 {
         font-weight: 100;
     }
-    </Style>"
+    </Style>
 </head>
 <body>""" + body + """</body>
 </html>"""
