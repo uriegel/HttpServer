@@ -18,8 +18,8 @@ namespace Server
             WebServer.Logger.lowTraceEnabled = true;
             var newConfig = new WebServer.InitializationData
             {
-                // Webroot = @"C:\Users\urieg\source\repos\ingorico\ingorico",
-                Webroot = @"C:\Program Files\caesar\CAEWebSrv\web",
+                Webroot = @"C:\Users\urieg\source\repos\ingorico\ingorico",
+                //Webroot = @"C:\Program Files\caesar\CAEWebSrv\web",
                 IsTlsEnabled = true,
                 TlsRedirect = true,
                 TlsPort = 4433,

@@ -3,6 +3,7 @@ open System
 open System.IO
 open Microsoft.Extensions.Logging
 open ActivePatterns
+open MimeTypes
 
 module FileSystem =
     let (|IsFileSystem|_|) request = 
@@ -69,5 +70,31 @@ module FileSystem =
 
         | None -> None
 
-    let serveFileSystem request = 
-        ()
+    let serveFileSystem socketSession request fileType = 
+        let sendFile () =
+            async {
+                let info = FileInfo fileType.Path
+                // TODO: if-modified-since        
+
+                let contentType = 
+                    match info.Extension.ToLower () with
+                    | ".html" 
+                    | ".htm" -> "text/html; charset=UTF-8"
+                    | ".css" -> "text/css; charset=UTF-8"
+                    | ".js" -> "application/javascript; charset=UTF-8"
+                    | ".appcache" -> "text/cache-manifest"
+                    | _ -> mimeType.[info.Extension] 
+
+                let lastModified = (info.LastWriteTime.ToUniversalTime ()).ToString "r"
+                try
+                    use stream = File.OpenRead fileType.Path
+                    ()
+                    // await SendStreamAsync(stream, contentType, lastModified, noCache);
+                with 
+                | e -> request.categoryLogger.log LogLevel.Warning <| sprintf "Could not send file: %A" e
+                ()
+            } 
+        async {
+            // TODO: SendRange
+            do! sendFile ()
+        }

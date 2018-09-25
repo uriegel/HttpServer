@@ -24,10 +24,9 @@ module RequestProcessing =
                         ("https://" + Configuration.Current.DomainName + 
                         (if Configuration.Current.TlsPort = 443 then "" else sprintf ":%d" Configuration.Current.TlsPort) + 
                         (request.header HeaderKey.Path :?> string))
-            | IsFileSystem value -> serveFileSystem value
-            // TODO: Redirection
-            // TODO: Serve file
+            | IsFileSystem value -> 
+                match value with
+                | File value -> do! serveFileSystem socketSession request value
+                | Redirection value -> do! FixedResponses.asyncSendMovedPermanently socketSession request value
             | _ -> do! FixedResponses.asyncSendNotFound socketSession request
-
-            // TODO: Stopwatch-Ausgabe, wie lange request dauerte
         }

@@ -7,6 +7,7 @@
     <Compile Include="ActivePattern.fs" />
     <Compile Include="Frame.fs" />
     <Compile Include="Ipv6TcpListenerFactory.fs" />
+    <Compile Include="MimeTypes.fs" />
     <Compile Include="ConsoleLogger.fs" />
     <Compile Include="Logger.fs" />
     <Compile Include="CategoryLogger.fs" />
