@@ -9,11 +9,12 @@ open System.Net.Security
 open System.Security.Cryptography.X509Certificates
 open Microsoft.Extensions.Logging
 open System.Net
+open System.Diagnostics
 
 module Processing = 
     let mutable private idSeed = 0
 
-    let asyncStartReceiving (tcpClient: TcpClient) isSecure = 
+    let asyncStartReceiving (tcpClient: TcpClient) isSecure (stopwatch: Stopwatch) = 
         let id = Interlocked.Increment &idSeed
         let log = Logger.log <| string id
         let lowTrace = Logger.lowTrace <| string id
@@ -73,16 +74,21 @@ module Processing =
                     async { return (tcpClient.GetStream () :> Stream, false) }
             try
                 let rec asyncReceive () = 
+                    let requestStopwatch = Stopwatch ()
                     async {
+                        if stopwatch.IsRunning then 
+                            let elapsed = stopwatch.Elapsed
+                            lowTrace (fun () -> sprintf "Connection established in %A" elapsed)
+                            stopwatch.Stop ()
                         let! result = 
                             if http2 then 
-                                RequestSession.asyncStart id networkStream 
+                                RequestSession.asyncStart id networkStream stopwatch
                             else 
                                 Request11Session.asyncStart {
                                     id = id
                                     remoteEndPoint = tcpClient.Client.RemoteEndPoint :?> IPEndPoint
                                     isSecure = isSecure
-                                } networkStream
+                                } networkStream requestStopwatch
                         if result then
                             return! asyncReceive ()
                     }

@@ -4,7 +4,7 @@ open System.IO
 open System
 
 module RequestSession =
-    let asyncStart socketSessionId (networkStream: Stream) =
+    let asyncStart socketSessionId (networkStream: Stream) stopwatch =
         let MAGIC = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n"
         
         let mutable headerTableSize = 0

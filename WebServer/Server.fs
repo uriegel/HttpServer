@@ -9,6 +9,7 @@ open System.Threading
 open System.Net.Sockets
 open System
 open Microsoft.Extensions.Logging
+open System.Diagnostics
 
 type TlsProtocol =
     Tls10 = 0
@@ -60,11 +61,11 @@ module Server =
     let mutable private listener: TcpListener Option = None
     let mutable private tlsListener: TcpListener Option = None
 
-    let private asyncOnConnected (tcpClient: TcpClient) isSecure =
+    let private asyncOnConnected (tcpClient: TcpClient) isSecure stopwatch =
         async {
             if isStarted then
                 try
-                    do! Processing.asyncStartReceiving tcpClient isSecure 
+                    do! Processing.asyncStartReceiving tcpClient isSecure stopwatch
                 with 
                 | :? SocketException as se when se.NativeErrorCode = 10054 -> ()
                 | :? ObjectDisposedException -> ()  // Stop() aufgerufen 
@@ -75,8 +76,10 @@ module Server =
             if isStarted then
                 try 
                     let! client = listener.AcceptTcpClientAsync () |> Async.AwaitTask
+                    let stopwatch = Stopwatch ()
+                    stopwatch.Start ()
                     asyncStartConnecting listener isSecure |> Async.StartImmediate
-                    asyncOnConnected client isSecure |> Async.StartImmediate
+                    asyncOnConnected client isSecure stopwatch |> Async.StartImmediate
                 with 
                 | :? SocketException as se when se.SocketErrorCode = SocketError.Interrupted && not isStarted -> ()
                 | e -> log LogLevel.Error (sprintf "Error occurred in connecting thread: %A" e)

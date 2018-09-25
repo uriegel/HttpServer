@@ -4,6 +4,7 @@ open System.IO
 open System.Threading
 open System
 open System.Text
+open System.Diagnostics
 
 module Request11Session =
     let mutable private idSeed = 0
@@ -14,7 +15,7 @@ module Request11Session =
 
     let headerBytes = Array.zeroCreate 20000
 
-    let asyncStart socketSession (networkStream: Stream) =
+    let asyncStart socketSession (networkStream: Stream) (stopwatch: Stopwatch) =
 
         let (|IsStatus|_|) value responseHeaders = 
             let found = 
@@ -30,6 +31,8 @@ module Request11Session =
             async {
                 let! read = networkStream.AsyncRead (headerBytes, alreadyRead, headerBytes.Length - alreadyRead)
                 if read > 0 then
+                    if not stopwatch.IsRunning then stopwatch.Start () |> ignore
+
                     let alreadyRead = alreadyRead + read
                     let header = System.Text.Encoding.UTF8.GetString (headerBytes, 0, alreadyRead)
                     if header.Contains "\r\n\r\n" then
@@ -48,8 +51,8 @@ module Request11Session =
                 lowTrace = Logger.lowTrace id
             }
 
-            let! result = readHeader 0
-            match result with
+            let! readResult = readHeader 0
+            match readResult with
             | Some (headerString, alreadyRead) -> 
                 let headers = Header11.createHeaderAccess headerString
 
@@ -100,8 +103,12 @@ module Request11Session =
                     header = headers
                     asyncSendBytes = asyncSendBytes
                 }
+                let timeSpan = stopwatch.Elapsed
+                logger.lowTrace (fun () -> sprintf "Request processed in %A" timeSpan)
                 return true
-            | None -> return false
+            | None -> 
+                logger.lowTrace <| fun () -> "Socket session closed"
+                return false
         }
 
 
