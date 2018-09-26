@@ -48,11 +48,11 @@ module FileSystem =
             | _ when relativePath.Length = 0 -> 
                 let path = Path.Combine (Configuration.Current.Webroot, "index.html")
                 if File.Exists path then
-                    let redirection = 
-                        match query with
-                        | Some value -> "/?" + value
-                        | None -> "/"
-                    Some <| Redirection redirection
+                    // let redirection = 
+                    // match query with
+                    // | Some value -> "/?" + value
+                    // | None -> "/"
+                    Some <| FileSystemType.File { Path = path; Query = query }
                 else
                     None
             | _ when File.Exists localFile -> Some <| FileSystemType.File { Path = localFile; Query = query} 
@@ -71,7 +71,37 @@ module FileSystem =
         | None -> None
 
     let serveFileSystem socketSession request fileType = 
-        let sendFile () =
+        let asyncSendStream (stream: Stream) contentType lastModified = 
+            async {
+                // TODO: ifModifiedSince
+                // TODO: ContentEncoding
+                // TODO: Expires
+                let headers = 
+                    [|  
+                        { key = HeaderKey.StatusOK; value = None }  
+                        { key = HeaderKey.ContentLength; value = Some (stream.Length :> obj) }  
+                        { key = HeaderKey.ContentType; value = Some (contentType :> obj) }  
+                    |] 
+
+
+
+                let! bytes = stream.AsyncRead <| int stream.Length
+
+                // // TODO: HEAD if request.header HeaderKey.Method = Method.Head then
+                // var bytes = new byte[8192];
+                // while (true)
+                // {
+                //     var read = await stream.ReadAsync(bytes, 0, bytes.Length);
+                //     if (read == 0)
+                //         return;
+                //     await WriteAsync(bytes, 0, read);
+                // }
+
+                // TODO: AsyncSendStream
+                do! request.asyncSendBytes headers bytes
+            }
+
+        let asyncSendFile () =
             async {
                 let info = FileInfo fileType.Path
                 // TODO: if-modified-since        
@@ -88,13 +118,12 @@ module FileSystem =
                 let lastModified = (info.LastWriteTime.ToUniversalTime ()).ToString "r"
                 try
                     use stream = File.OpenRead fileType.Path
-                    ()
-                    // await SendStreamAsync(stream, contentType, lastModified, noCache);
+                    do! asyncSendStream stream contentType lastModified
                 with 
                 | e -> request.categoryLogger.log LogLevel.Warning <| sprintf "Could not send file: %A" e
                 ()
             } 
         async {
             // TODO: SendRange
-            do! sendFile ()
+            do! asyncSendFile ()
         }

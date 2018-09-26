@@ -60,7 +60,8 @@ module Request11Session =
                     async {
                         let responseHeaders = ResponseHeader.prepare headers responseHeaders
 
-                        let headersToSerialize = responseHeaders |> Array.filter (fun n -> n.key <> HeaderKey.Status404
+                        let headersToSerialize = responseHeaders |> Array.filter (fun n -> n.key <> HeaderKey.StatusOK
+                                                                                        && n.key <> HeaderKey.Status404
                                                                                         && n.key <> HeaderKey.Status301)
 
                         // TODO:
@@ -78,14 +79,14 @@ module Request11Session =
                                 | Some value ->
                                     match value with    
                                     | :? string as value -> value
-                                    | :? int as value -> value.ToString ()
                                     | :? DateTime as value -> value.ToString "R"
-                                    | _ -> failwith "Wrong value type"
+                                    | _ -> value.ToString ()
                                 | None -> failwith "No value"
                             key + ": " + value
 
                         let createStatus () = 
                             match responseHeaders with
+                                | IsStatus HeaderKey.StatusOK _ -> "200 OK"
                                 | IsStatus HeaderKey.Status404 _ -> "404 Not found"
                                 | IsStatus HeaderKey.Status301 _ -> "301 Moved Permanently"
                                 | _ -> failwith "No status"
