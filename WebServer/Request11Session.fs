@@ -13,9 +13,8 @@ module Request11Session =
         let id = Interlocked.Increment &idSeed
         sprintf "%d-%d" socketSessionId id
 
-    let headerBytes = Array.zeroCreate 20000
-
     let asyncStart socketSession (networkStream: Stream) (stopwatch: Stopwatch) =
+        let headerBytes = Array.zeroCreate 20000
 
         let (|IsStatus|_|) value responseHeaders = 
             let found = 

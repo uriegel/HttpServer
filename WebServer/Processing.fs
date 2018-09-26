@@ -105,6 +105,8 @@ module Processing =
             | :? ObjectDisposedException ->
                 lowTrace <| fun () -> "Object disposed"
             | e -> log LogLevel.Warning <| sprintf "An error has occurred while reading socket, error: %A" e
+            
+            // TODO: This is not a graceful shutdown!
             tcpClient.Close ()
             // TODO: Counter erniedrigen
         }        

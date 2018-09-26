@@ -26,7 +26,7 @@ namespace Server
                 //Http2 = true,
                 //CertificateName = "CAESAR",
                 Certificate = certificate,
-                DomainName = "uriegel.de",
+                DomainName = "uriegel.de"
                 //DomainName = "cas-ws121013.caseris.intern"
             };
             WebServer.Server.Start(newConfig);
