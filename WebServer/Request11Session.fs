@@ -95,7 +95,9 @@ module Request11Session =
                                             + System.String.Join ("\r\n", headerStrings) + "\r\n\r\n" 
                         let headerBytes = Encoding.UTF8.GetBytes headerString
                         do! networkStream.AsyncWrite (headerBytes, 0, headerBytes.Length)
-                        do! networkStream.AsyncWrite (bytes, 0, bytes.Length)
+                        match bytes with
+                        | Some value -> do! networkStream.AsyncWrite (value, 0, value.Length)
+                        | _ -> ()
                     }
 
                 do! RequestProcessing.asyncProcess socketSession {

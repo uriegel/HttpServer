@@ -19,8 +19,8 @@
     <Compile Include="SocketSession.fs" />
     <Compile Include="Html.fs" />
     <Compile Include="FileSystemType.fs" />
-    <Compile Include="FileSystem.fs" />
     <Compile Include="FixedResponses.fs" />
+    <Compile Include="FileSystem.fs" />
     <Compile Include="RequestProcessing.fs" />
     <Compile Include="Request11Session.fs" />
     <Compile Include="RequestSession.fs" />

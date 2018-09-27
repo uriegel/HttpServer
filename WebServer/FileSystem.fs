@@ -84,10 +84,17 @@ module FileSystem =
                     |] 
 
 
-
-                let! bytes = stream.AsyncRead <| int stream.Length
-
-                // // TODO: HEAD if request.header HeaderKey.Method = Method.Head then
+                let! bytes = 
+                    async {
+                        match LanguagePrimitives.EnumOfValue<int, Method> (request.header HeaderKey.Method :?> int) with
+                        | Method.Head -> return None
+                        | _ -> 
+                            let! bytes = stream.AsyncRead <| int stream.Length
+                            return Some bytes
+                        
+                    }
+                ()
+                // TODO: AsyncSendStream
                 // var bytes = new byte[8192];
                 // while (true)
                 // {
@@ -96,8 +103,6 @@ module FileSystem =
                 //         return;
                 //     await WriteAsync(bytes, 0, read);
                 // }
-
-                // TODO: AsyncSendStream
                 do! request.asyncSendBytes headers bytes
             }
 

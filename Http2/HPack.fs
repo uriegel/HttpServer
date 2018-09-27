@@ -36,7 +36,7 @@ module HPack =
             let huffman = ((firstByte &&& 0x80uy) = 0x80uy) // 10000000
             let length = firstByte &&& 0x7Fuy // 01111111
             let bytes: byte[] = Array.zeroCreate (int length) 
-            binaryReader.Read(bytes, 0, bytes.Length) |> ignore
+            binaryReader.Read (bytes, 0, bytes.Length) |> ignore
             if huffman then 
                 Huffman.decode bytes 
             else
