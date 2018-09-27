@@ -62,7 +62,6 @@ module Request11Session =
                         let headersToSerialize = responseHeaders |> Array.filter (fun n -> n.key <> HeaderKey.StatusOK
                                                                                         && n.key <> HeaderKey.Status404
                                                                                         && n.key <> HeaderKey.Status301)
-
                         // TODO:
                         // if (!headers.ContainsKey("Content-Length"))
                         //     headers["Connection"] = "close";
@@ -72,6 +71,7 @@ module Request11Session =
                                 match responseHeaderValue.key with
                                 | HeaderKey.ContentLength -> "Content-Length"
                                 | HeaderKey.ContentType -> "Content-Type"
+                                | HeaderKey.ContentEncoding -> "Content-Encoding"
                                 | _ -> responseHeaderValue.key.ToString ()
                             let value = 
                                 match responseHeaderValue.value with
@@ -91,7 +91,7 @@ module Request11Session =
                                 | _ -> failwith "No status"
 
                         let headerStrings = headersToSerialize |> Array.map createHeaderStringValue
-                        let headerString = Header.getHttpVersionAsString (headers HeaderKey.HttpVersion :?> HttpVersion) + " " + (createStatus ()) + "\r\n" 
+                        let headerString = Header.getHttpVersionAsString headers.HttpVersion + " " + (createStatus ()) + "\r\n" 
                                             + System.String.Join ("\r\n", headerStrings) + "\r\n\r\n" 
                         let headerBytes = Encoding.UTF8.GetBytes headerString
                         do! networkStream.AsyncWrite (headerBytes, 0, headerBytes.Length)

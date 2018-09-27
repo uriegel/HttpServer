@@ -12,10 +12,12 @@ type HeaderKey =
     | Status301 = 6
     | ContentLength = 7
     | ContentType = 8
-    | Date = 9
-    | Server = 10
-    | XFrameOptions = 11 //X-Frame-Options
-    | Location = 12
+    | ContentEncoding = 9
+    | AcceptEncoding = 10
+    | Date = 11
+    | Server = 12
+    | XFrameOptions = 13 //X-Frame-Options
+    | Location = 14
 
 type HttpVersion = 
     | Http1 = 0

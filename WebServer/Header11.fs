@@ -29,15 +29,24 @@ module Header11 =
             | _ -> failwith "Unknown HTTP protocol"
 
         let getHeaderValue headerKey = 
-            match headerKey with
-            | HeaderKey.Method -> method :> obj
-            | HeaderKey.Path -> path :> obj
-            | HeaderKey.HttpVersion -> httpVersion :> obj
-            // TODO: Memoization
-            | HeaderKey.IfModifiedSince -> "" :> obj
-            | _ -> failwith "Unknown header key"
+            let searchKey = 
+                match headerKey with
+                | HeaderKey.AcceptEncoding -> "accept-encoding"
+                | _ -> ""
+            headerParts
+            |> Seq.tryFind (fun n -> (n.ToLower ()).StartsWith searchKey)
 
-        getHeaderValue
+        {
+            Method = method
+            Path = path 
+            HttpVersion = httpVersion
+            AcceptEncoding = 
+                match getHeaderValue HeaderKey.AcceptEncoding with
+                | Some value when value.Contains("deflate") -> ContentEncoding.Deflate
+                | Some value when value.Contains("gzip") -> ContentEncoding.GZip
+                | _ -> ContentEncoding.None
+        }
 
+            
 
 

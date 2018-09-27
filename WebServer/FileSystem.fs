@@ -4,10 +4,11 @@ open System.IO
 open Microsoft.Extensions.Logging
 open ActivePatterns
 open MimeTypes
+open System.IO.Compression
 
 module FileSystem =
     let (|IsFileSystem|_|) request = 
-        let url = Uri.UnescapeDataString ((request.header HeaderKey.Path) :?> string)
+        let url = Uri.UnescapeDataString request.header.Path
         let (url, query) = 
             match url with
             | SplitChar '?' (path, query) -> (path, Some query)
@@ -71,29 +72,47 @@ module FileSystem =
         | None -> None
 
     let serveFileSystem socketSession request fileType = 
-        let asyncSendStream (stream: Stream) contentType lastModified = 
+        let asyncSendStream (stream: Stream) (contentType: string) lastModified = 
             async {
-                // TODO: ifModifiedSince
-                // TODO: ContentEncoding
-                // TODO: Expires
+                let! bytes = stream.AsyncRead <| int stream.Length
+
+                let compress (stream: Stream) = 
+                    stream.Read (bytes, 0, bytes.Length)
+
+                let compress =  
+                    contentType.StartsWith ("application/javascript", StringComparison.CurrentCultureIgnoreCase)
+                    || contentType.StartsWith ("text/", StringComparison.CurrentCultureIgnoreCase)
+                
                 let headers = 
                     [|  
                         { key = HeaderKey.StatusOK; value = None }  
-                        { key = HeaderKey.ContentLength; value = Some (stream.Length :> obj) }  
                         { key = HeaderKey.ContentType; value = Some (contentType :> obj) }  
                     |] 
 
+                // TODO: call  o n e  function instead of double code 
+                let (bytes, headers) = 
+                    match request.header.AcceptEncoding with
+                    | ContentEncoding.Deflate when compress -> 
+                        use ms = new MemoryStream ()
+                        use compressedStream = new DeflateStream (ms, System.IO.Compression.CompressionMode.Compress, true)
+                        compressedStream.Write (bytes, 0, bytes.Length) |> ignore
+                        compressedStream.Close ()
+                        ms.Capacity <- int ms.Length
+                        (ms.GetBuffer (), Array.concat [ headers; [|{ key = HeaderKey.ContentEncoding; value = Some ("deflate" :> obj) }|]])
+                    | ContentEncoding.GZip when compress -> 
+                        use ms = new MemoryStream ()
+                        use compressedStream = new GZipStream (ms, System.IO.Compression.CompressionMode.Compress, true)
+                        compressedStream.Write (bytes, 0, bytes.Length) |> ignore
+                        compressedStream.Close ()
+                        ms.Capacity <- int ms.Length
+                        (ms.GetBuffer (), Array.concat [ headers; [|{ key = HeaderKey.ContentEncoding; value = Some ("gzip" :> obj) }|]])
+                    | _ -> (bytes, headers)
 
-                let! bytes = 
-                    async {
-                        match LanguagePrimitives.EnumOfValue<int, Method> (request.header HeaderKey.Method :?> int) with
-                        | Method.Head -> return None
-                        | _ -> 
-                            let! bytes = stream.AsyncRead <| int stream.Length
-                            return Some bytes
-                        
-                    }
-                ()
+                let headers = Array.concat [ headers; [|{ key = HeaderKey.ContentLength; value = Some (bytes.Length :> obj) }|]]
+
+                // TODO: ifModifiedSince
+                // TODO: Expires
+
                 // TODO: AsyncSendStream
                 // var bytes = new byte[8192];
                 // while (true)
@@ -103,6 +122,12 @@ module FileSystem =
                 //         return;
                 //     await WriteAsync(bytes, 0, read);
                 // }
+
+                let bytes = 
+                    match request.header.Method with
+                    | Method.Head -> None
+                    | _ -> Some bytes
+
                 do! request.asyncSendBytes headers bytes
             }
 

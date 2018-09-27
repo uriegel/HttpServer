@@ -13,8 +13,8 @@ module RequestProcessing =
 
         async {
             request.categoryLogger.log LogLevel.Trace (sprintf "Request: %A %s %s %s%s" socketSession.remoteEndPoint 
-                (string <| request.header HeaderKey.Method) (request.header HeaderKey.Path :?> string) 
-                (Header.getHttpVersionAsString (request.header HeaderKey.HttpVersion :?> HttpVersion ))
+                (string request.header.Method) request.header.Path 
+                (Header.getHttpVersionAsString request.header.HttpVersion)
                 (if socketSession.isSecure then "" else " not secure"))
             
             match request with
@@ -23,7 +23,7 @@ module RequestProcessing =
                 do! FixedResponses.asyncSendMovedPermanently socketSession request 
                         ("https://" + Configuration.Current.DomainName + 
                         (if Configuration.Current.TlsPort = 443 then "" else sprintf ":%d" Configuration.Current.TlsPort) + 
-                        (request.header HeaderKey.Path :?> string))
+                        request.header.Path)
             | IsFileSystem value -> 
                 match value with
                 | File value -> do! serveFileSystem socketSession request value

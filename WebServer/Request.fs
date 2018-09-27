@@ -2,6 +2,6 @@ namespace WebServer
 
 type Request = {
     categoryLogger: CategoryLogger
-    header: HeaderKey->obj
+    header: RequestHeaders
     asyncSendBytes: ResponseHeaderValue[]->byte[] option->Async<unit> 
 }
