@@ -18,6 +18,7 @@ type HeaderKey =
     | Server = 12
     | XFrameOptions = 13 //X-Frame-Options
     | Location = 14
+    | Expires = 15
 
 type HttpVersion = 
     | Http1 = 0

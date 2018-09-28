@@ -30,10 +30,18 @@ module Response =
             compressStream (fun stream -> new GZipStream (stream, System.IO.Compression.CompressionMode.Compress, true) :> Stream ) "gzip"
         | _ -> (bytes, headers)
 
-    let asyncSend request bytes headers =
+    let asyncSend request (contentType: string) bytes headers =
         async {
             // TODO: ifModifiedSince
-            // TODO: Expires
+            let headers = 
+                if contentType.StartsWith ("application/javascript", StringComparison.CurrentCultureIgnoreCase)
+                    || contentType.StartsWith ("text/css", StringComparison.CurrentCultureIgnoreCase)
+                    || contentType.StartsWith ("text/html", StringComparison.CurrentCultureIgnoreCase) then
+                    (headers |> Array.append [|{ key = HeaderKey.Expires; value = Some ((DateTime.Now.ToUniversalTime()).ToString "r" :> obj) }|])
+                else
+                    headers
+
+
 
             // TODO: AsyncSendStream
             // var bytes = new byte[8192];

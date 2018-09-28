@@ -78,7 +78,7 @@ module FileSystem =
                 let (bytes, headers) = tryCompress request contentType bytes
                 let headers = headers |> Array.append [|{ key = HeaderKey.ContentLength; value = Some (bytes.Length :> obj) }|]
 
-                do! Response.asyncSend request bytes headers
+                do! Response.asyncSend request contentType bytes headers
             }
 
         let asyncSendFile () =

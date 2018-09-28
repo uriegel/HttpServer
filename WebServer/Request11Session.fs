@@ -72,6 +72,7 @@ module Request11Session =
                                 | HeaderKey.ContentLength -> "Content-Length"
                                 | HeaderKey.ContentType -> "Content-Type"
                                 | HeaderKey.ContentEncoding -> "Content-Encoding"
+                                | HeaderKey.Expires -> "Expires"
                                 | _ -> responseHeaderValue.key.ToString ()
                             let value = 
                                 match responseHeaderValue.value with
