@@ -25,7 +25,7 @@ namespace Server
                 IsTlsEnabled = true,
                 TlsRedirect = true,
                 TlsPort = 4433,
-                //Http2 = true,
+                Http2 = true,
                 //CertificateName = "CAESAR",
                 Certificate = certificate,
                 DomainName = "uriegel.de"

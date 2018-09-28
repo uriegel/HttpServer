@@ -4,8 +4,8 @@ open System.IO
 open System
 
 module RequestSession =
+    let MAGIC = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n"
     let asyncStart socketSessionId (networkStream: Stream) stopwatch =
-        let MAGIC = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n"
         
         let mutable headerTableSize = 0
         let mutable windowUpdate = 0
@@ -61,7 +61,7 @@ module RequestSession =
                     use headerStream = headers.Stream
                     logger.lowTrace (fun () -> sprintf "%d - Headers, E: %A, flags: %A, weight: %d" headers.StreamId headers.E headers.Flags headers.Weight)
                     // TODO: Type Decoder in session, set properties like HEADER_TABLE_SIZE
-                    //let headerFields = HPack.decode headerStream
+                    let headerFields = HPack.decode headerStream
                     //do! asyncProcessRequest headers.StreamId headerFields
                     ()
                 | :? Settings as settings -> 

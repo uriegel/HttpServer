@@ -25,7 +25,11 @@
     <Compile Include="FileSystem.fs" />
     <Compile Include="RequestProcessing.fs" />
     <Compile Include="Request11Session.fs" />
-    <Compile Include="RequestSession.fs" />
+    <Compile Include="HuffmanTree.fs" />
+    <Compile Include="Huffman.fs" />
+    <Compile Include="StaticTableIndex.fs" />
+    <Compile Include="HPack.fs" />
+    <Compile Include="Request2Session.fs" />
     <Compile Include="Processing.fs" />
     <Compile Include="Server.fs" />
   </ItemGroup>
