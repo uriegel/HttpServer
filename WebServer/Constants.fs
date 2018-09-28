@@ -4,6 +4,6 @@ open System.Reflection
 
 module Constants = 
     let private serverConstant = 
-        // TODO: "URiegel Server" + ((FileVersionInfo.GetVersionInfo (Assembly.GetExecutingAssembly().Location)).ProductVersion).ToString()
-        "URiegel Server"
+        "URiegel Server" + ((FileVersionInfo.GetVersionInfo (Assembly.GetExecutingAssembly().Location)).ProductVersion).ToString()
+
     let server = serverConstant
