@@ -5,6 +5,7 @@ open Microsoft.Extensions.Logging
 open ActivePatterns
 open MimeTypes
 open Response
+open FixedResponses
 
 module FileSystem =
     let (|IsFileSystem|_|) request = 
@@ -76,7 +77,11 @@ module FileSystem =
             async {
                 let! bytes = stream.AsyncRead <| int stream.Length
                 let (bytes, headers) = tryCompress request contentType bytes
-                let headers = headers |> Array.append [|{ key = HeaderKey.ContentLength; value = Some (bytes.Length :> obj) }|]
+                let contentLengthValue = { key = HeaderKey.ContentLength; value = Some (bytes.Length :> obj) }
+                let headers = 
+                    match lastModified with
+                    | Some value -> headers |> Array.append [|contentLengthValue; { key = HeaderKey.LastModified; value = Some (value :> obj) }|]
+                    | None -> headers |> Array.append [|contentLengthValue|]
 
                 do! Response.asyncSend request contentType bytes headers
             }
@@ -84,24 +89,32 @@ module FileSystem =
         let asyncSendFile () =
             async {
                 let info = FileInfo fileType.Path
-                // TODO: if-modified-since        
+                let notModified = 
+                    match request.header.IfModifiedSince with
+                    | Some value ->
+                        let fileTime = info.LastWriteTime.AddTicks -(info.LastWriteTime.Ticks % (TimeSpan.FromSeconds 1.0).Ticks)
+                        let diff = fileTime - request.header.IfModifiedSince.Value
+                        diff <= TimeSpan.FromMilliseconds 0.0 
+                    | None -> false
 
-                let contentType = 
-                    match info.Extension.ToLower () with
-                    | ".html" 
-                    | ".htm" -> "text/html; charset=UTF-8"
-                    | ".css" -> "text/css; charset=UTF-8"
-                    | ".js" -> "application/javascript; charset=UTF-8"
-                    | ".appcache" -> "text/cache-manifest"
-                    | _ -> mimeType.[info.Extension] 
+                if notModified then
+                    do! asyncSendNotModifed socketSession request
+                else
+                    let contentType = 
+                        match info.Extension.ToLower () with
+                        | ".html" 
+                        | ".htm" -> "text/html; charset=UTF-8"
+                        | ".css" -> "text/css; charset=UTF-8"
+                        | ".js" -> "application/javascript; charset=UTF-8"
+                        | ".appcache" -> "text/cache-manifest"
+                        | _ -> mimeType.[info.Extension] 
 
-                let lastModified = (info.LastWriteTime.ToUniversalTime ()).ToString "r"
-                try
-                    use stream = File.OpenRead fileType.Path
-                    do! asyncSendStream stream contentType lastModified
-                with 
-                | e -> request.categoryLogger.log LogLevel.Warning <| sprintf "Could not send file: %A" e
-                ()
+                    let lastModified = Some <| (info.LastWriteTime.ToUniversalTime ()).ToString "r"
+                    try
+                        use stream = File.OpenRead fileType.Path
+                        do! asyncSendStream stream contentType lastModified
+                    with 
+                    | e -> request.categoryLogger.log LogLevel.Warning <| sprintf "Could not send file: %A" e
             } 
         async {
             // TODO: SendRange

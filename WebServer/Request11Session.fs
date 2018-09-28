@@ -60,6 +60,7 @@ module Request11Session =
                         let responseHeaders = ResponseHeader.prepare headers responseHeaders
 
                         let headersToSerialize = responseHeaders |> Array.filter (fun n -> n.key <> HeaderKey.StatusOK
+                                                                                        && n.key <> HeaderKey.Status304
                                                                                         && n.key <> HeaderKey.Status404
                                                                                         && n.key <> HeaderKey.Status301)
                         // TODO:
@@ -73,6 +74,7 @@ module Request11Session =
                                 | HeaderKey.ContentType -> "Content-Type"
                                 | HeaderKey.ContentEncoding -> "Content-Encoding"
                                 | HeaderKey.Expires -> "Expires"
+                                | HeaderKey.LastModified -> "Last-Modified"
                                 | _ -> responseHeaderValue.key.ToString ()
                             let value = 
                                 match responseHeaderValue.value with
@@ -87,7 +89,8 @@ module Request11Session =
                         let createStatus () = 
                             match responseHeaders with
                                 | IsStatus HeaderKey.StatusOK _ -> "200 OK"
-                                | IsStatus HeaderKey.Status404 _ -> "404 Not found"
+                                | IsStatus HeaderKey.Status404 _ -> "404 Not Found"
+                                | IsStatus HeaderKey.Status304 _ -> "304 Not Modified"
                                 | IsStatus HeaderKey.Status301 _ -> "301 Moved Permanently"
                                 | _ -> failwith "No status"
 

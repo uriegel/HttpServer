@@ -32,9 +32,20 @@ module Header11 =
             let searchKey = 
                 match headerKey with
                 | HeaderKey.AcceptEncoding -> "accept-encoding"
+                | HeaderKey.IfModifiedSince -> "if-modified-since"
                 | _ -> ""
-            headerParts
-            |> Seq.tryFind (fun n -> (n.ToLower ()).StartsWith searchKey)
+            match headerParts |> Seq.tryFind (fun n -> (n.ToLower ()).StartsWith searchKey) with
+            | Some value -> Some (value.Substring ((value.IndexOf ": ") + 1))
+            | None -> None
+
+        let parseModifiedTime (value: string) = 
+            let pos = value.IndexOf ';'
+            let value = 
+                if pos <> -1 then
+                    value.Substring (0, pos)
+                else
+                    value
+            DateTime.Parse (value.Trim ())
 
         {
             Method = method
@@ -45,6 +56,10 @@ module Header11 =
                 | Some value when value.Contains("deflate") -> ContentEncoding.Deflate
                 | Some value when value.Contains("gzip") -> ContentEncoding.GZip
                 | _ -> ContentEncoding.None
+            IfModifiedSince = 
+                match getHeaderValue HeaderKey.IfModifiedSince with
+                | Some value -> Some (parseModifiedTime value)
+                | _ -> None
         }
 
             
