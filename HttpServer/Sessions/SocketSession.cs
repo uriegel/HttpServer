@@ -12,7 +12,7 @@ using HttpServer.Exceptions;
 
 namespace HttpServer.Sessions
 {
-    // TODO: IDisposable und using
+    
     /// <summary>
     /// Bei HTTP wird die Socket für mehrere Aufrufe wiederverwendet.
     /// Hiermit wird eine solche Session implementiert, im Gegensatz zur logischen <see cref="RequestSession"/>, die bei jedem Aufruf neu angelegt wird

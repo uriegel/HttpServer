@@ -89,26 +89,23 @@ module FileSystem =
                         { key = HeaderKey.ContentType; value = Some (contentType :> obj) }  
                     |] 
 
-                // TODO: call  o n e  function instead of double code 
+                let compressStream (streamCompressor: Stream->Stream) compressionMethod =
+                    use ms = new MemoryStream ()
+                    use compressedStream = streamCompressor ms
+                    compressedStream.Write (bytes, 0, bytes.Length) |> ignore
+                    compressedStream.Close ()
+                    ms.Capacity <- int ms.Length
+                    (ms.GetBuffer (), headers |> Array.append [|{ key = HeaderKey.ContentEncoding; value = Some compressionMethod }|])
+
                 let (bytes, headers) = 
                     match request.header.AcceptEncoding with
                     | ContentEncoding.Deflate when compress -> 
-                        use ms = new MemoryStream ()
-                        use compressedStream = new DeflateStream (ms, System.IO.Compression.CompressionMode.Compress, true)
-                        compressedStream.Write (bytes, 0, bytes.Length) |> ignore
-                        compressedStream.Close ()
-                        ms.Capacity <- int ms.Length
-                        (ms.GetBuffer (), Array.concat [ headers; [|{ key = HeaderKey.ContentEncoding; value = Some ("deflate" :> obj) }|]])
+                        compressStream (fun stream -> new DeflateStream (stream, System.IO.Compression.CompressionMode.Compress, true) :> Stream ) "deflate"
                     | ContentEncoding.GZip when compress -> 
-                        use ms = new MemoryStream ()
-                        use compressedStream = new GZipStream (ms, System.IO.Compression.CompressionMode.Compress, true)
-                        compressedStream.Write (bytes, 0, bytes.Length) |> ignore
-                        compressedStream.Close ()
-                        ms.Capacity <- int ms.Length
-                        (ms.GetBuffer (), Array.concat [ headers; [|{ key = HeaderKey.ContentEncoding; value = Some ("gzip" :> obj) }|]])
+                        compressStream (fun stream -> new GZipStream (stream, System.IO.Compression.CompressionMode.Compress, true) :> Stream ) "gzip"
                     | _ -> (bytes, headers)
 
-                let headers = Array.concat [ headers; [|{ key = HeaderKey.ContentLength; value = Some (bytes.Length :> obj) }|]]
+                let headers = headers |> Array.append [|{ key = HeaderKey.ContentLength; value = Some (bytes.Length :> obj) }|]
 
                 // TODO: ifModifiedSince
                 // TODO: Expires

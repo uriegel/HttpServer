@@ -199,7 +199,7 @@ module Server =
                 log LogLevel.Warning (sprintf "Could not start HTTP Listener: %A" e)
                 isStarted <- false
     let Stop () =
-        if not isStarted then
+        if isStarted then
             try
                 log LogLevel.Information "Terminating managed extensions..."
 
@@ -226,4 +226,5 @@ module Server =
                         value.Stop ()
                         log LogLevel.Information "HTTPS listener stopped"
                     | None -> ()
+                log LogLevel.Information "Web Server stopped"
             with e -> log LogLevel.Warning (sprintf "Could not stop web server: %A" e)
