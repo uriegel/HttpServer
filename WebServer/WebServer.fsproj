@@ -21,6 +21,7 @@
     <Compile Include="Html.fs" />
     <Compile Include="FileSystemType.fs" />
     <Compile Include="FixedResponses.fs" />
+    <Compile Include="Response.fs" />
     <Compile Include="FileSystem.fs" />
     <Compile Include="RequestProcessing.fs" />
     <Compile Include="Request11Session.fs" />
