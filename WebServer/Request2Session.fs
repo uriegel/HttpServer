@@ -55,8 +55,28 @@ module RequestSession =
                 do! networkStream.AsyncWrite (bytes, 0, bytes.Length)
             }
 
-        let asyncSendBytes responseHeaders bytes = 
+        let asyncSendBytes (responseHeaders: ResponseHeaderValue[]) bytes = 
             async {
+                let affe = 
+                    responseHeaders
+                    |> Array.map (fun n -> 
+                        match n.key with
+                        | HeaderKey.StatusOK -> HPack.FieldIndex (HPack.StaticIndex StaticTableIndex.Status200)
+                        | HeaderKey.Status404 -> HPack.FieldIndex (HPack.StaticIndex StaticTableIndex.Status404)
+                        //| HeaderKey.Status301 -> HPack.FieldIndex (HPack.StaticIndex StaticTableIndex.Status301) // TODO: Gibts nicht
+                        | HeaderKey.Status304 -> HPack.FieldIndex (HPack.StaticIndex StaticTableIndex.Status304)
+                        | HeaderKey.ContentType -> HPack.Field { Key = (HPack.StaticIndex StaticTableIndex.ContentType); Value = string n.value } 
+                        | HeaderKey.ContentLength -> HPack.Field { Key = (HPack.StaticIndex StaticTableIndex.ContentLength); Value = string n.value } 
+                        | HeaderKey.ContentEncoding -> HPack.Field { Key = (HPack.StaticIndex StaticTableIndex.ContentEncoding); Value = string n.value } 
+                        | HeaderKey.Expires -> HPack.Field { Key = (HPack.StaticIndex StaticTableIndex.Expires); Value = string n.value } 
+                        | HeaderKey.Date -> 
+                            HPack.Field { Key = (HPack.StaticIndex StaticTableIndex.Date); Value = (n.value.Value :?> DateTime).ToString "R" } 
+                        | HeaderKey.Server -> HPack.Field { Key = (HPack.StaticIndex StaticTableIndex.Server); Value = string n.value } 
+                        | HeaderKey.LastModified -> HPack.Field { Key = (HPack.StaticIndex StaticTableIndex.LastModified); Value = string n.value } // TODO: ist string, nicht DateTime!
+                        | _ -> failwith "Not supported"
+
+                        //
+                    ) 
                 ()
             }
 
