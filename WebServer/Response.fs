@@ -32,7 +32,6 @@ module Response =
 
     let asyncSend request (contentType: string) bytes headers =
         async {
-            // TODO: ifModifiedSince
             let headers = 
                 if contentType.StartsWith ("application/javascript", StringComparison.CurrentCultureIgnoreCase)
                     || contentType.StartsWith ("text/css", StringComparison.CurrentCultureIgnoreCase)
@@ -40,8 +39,6 @@ module Response =
                     (headers |> Array.append [|{ key = HeaderKey.Expires; value = Some ((DateTime.Now.ToUniversalTime()).ToString "r" :> obj) }|])
                 else
                     headers
-
-
 
             // TODO: AsyncSendStream
             // var bytes = new byte[8192];
@@ -58,5 +55,5 @@ module Response =
                 | Method.Head -> None
                 | _ -> Some bytes
 
-            do! request.asyncSendBytes headers bytes
+            do! request.asyncSendBytes request headers bytes
         }

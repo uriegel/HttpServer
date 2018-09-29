@@ -55,9 +55,10 @@ module RequestSession =
                 do! networkStream.AsyncWrite (bytes, 0, bytes.Length)
             }
 
-        let asyncSendBytes (responseHeaders: ResponseHeaderValue[]) bytes = 
+        let asyncSendBytes request (responseHeaders: ResponseHeaderValue[]) bytes = 
             async {
-                let affe = 
+                let responseHeaders = ResponseHeader.prepare request.header responseHeaders
+                let test = 
                     responseHeaders
                     |> Array.map (fun n -> 
                         match n.key with
@@ -72,7 +73,8 @@ module RequestSession =
                         | HeaderKey.Date -> 
                             HPack.Field { Key = (HPack.StaticIndex StaticTableIndex.Date); Value = (n.value.Value :?> DateTime).ToString "R" } 
                         | HeaderKey.Server -> HPack.Field { Key = (HPack.StaticIndex StaticTableIndex.Server); Value = string n.value } 
-                        | HeaderKey.LastModified -> HPack.Field { Key = (HPack.StaticIndex StaticTableIndex.LastModified); Value = string n.value } // TODO: ist string, nicht DateTime!
+                        | HeaderKey.LastModified -> 
+                            HPack.Field { Key = (HPack.StaticIndex StaticTableIndex.LastModified); Value = (n.value.Value :?> DateTime).ToString "R" } 
                         | _ -> failwith "Not supported"
 
                         //

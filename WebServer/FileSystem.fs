@@ -109,7 +109,7 @@ module FileSystem =
                         | ".appcache" -> "text/cache-manifest"
                         | _ -> mimeType.[info.Extension] 
 
-                    let lastModified = Some <| (info.LastWriteTime.ToUniversalTime ()).ToString "r"
+                    let lastModified = Some <| info.LastWriteTime.ToUniversalTime ()
                     try
                         use stream = File.OpenRead fileType.Path
                         do! asyncSendStream stream contentType lastModified
