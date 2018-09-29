@@ -3,66 +3,51 @@ open System
 open HPack
 
 module Header2 = 
-    let createHeaderAccess headerFields = 
-
-        let getAcceptEncoding (encodingString: string) = 
-            if encodingString.Contains("deflate", StringComparison.InvariantCultureIgnoreCase) then
-                ContentEncoding.Deflate
-            elif encodingString.Contains("gzip", StringComparison.InvariantCultureIgnoreCase) then
-                ContentEncoding.GZip
-            else
-                ContentEncoding.None
-
-        // TODO: homePath: ""
-        
-        let getKeyValue headerField = 
-            match headerField with  
-            | FieldIndex fieldIndex -> 
-                match fieldIndex with 
-                | StaticIndex staticIndex -> 
-                    match staticIndex with
-                    | StaticTableIndex.MethodGET -> Some (HeaderKey.Method, Method.Get :> obj)
-                    | StaticTableIndex.MethodPOST -> Some (HeaderKey.Method, Method.Post :> obj)
-                    | StaticTableIndex.PathHome -> Some (HeaderKey.Path, "" :> obj)
-                    | StaticTableIndex.PathIndexHtml -> Some (HeaderKey.Path, "/index.html" :> obj)
-                    | _ -> None
+    let createHeaderAccess (headers: Map<HPack.Index,string option>) = 
+        let (|FindMethod|_|) (method: Index) (arg: Map<HPack.Index,string option>) = 
+            match arg.TryFind method with
+            | Some value -> 
+                match method with
+                | HPack.StaticIndex StaticTableIndex.MethodGET -> Some Method.Get
+                | HPack.StaticIndex StaticTableIndex.MethodPOST -> Some Method.Post 
                 | _ -> None
-            | Field field ->
-                match field.Key with 
-                | StaticIndex staticIndex ->
-                    match staticIndex with
-                    | StaticTableIndex.AcceptEncodingGzipDeflate -> Some (HeaderKey.AcceptEncoding, (getAcceptEncoding field.Value) :> obj)
-                    | _ -> None
-                | Key keyValue when keyValue = ":path" -> Some  (HeaderKey.Path, field.Value :> obj)
-                | _ -> None
+            | None -> None
 
-        let rec getAllKeyValue headerFieldList =
-            match headerFieldList with
-            | head :: tail -> 
-                match tail with 
-                | [] -> [getKeyValue head]
-                | _ -> getKeyValue head :: getAllKeyValue tail
-            | _ -> failwith "header list empty"
+        let method =
+            match headers with
+            | FindMethod (HPack.StaticIndex StaticTableIndex.MethodGET) value -> value
+            | FindMethod (HPack.StaticIndex StaticTableIndex.MethodPOST) value -> value
+            | _ -> failwith "No method"
 
-        let headers = 
-            getAllKeyValue headerFields
-            |> List.filter (fun n -> n.IsSome)
-            |> List.map (fun n -> n.Value)
-            |> Map.ofList
+        let path = 
+            match headers.TryFind(HPack.StaticIndex StaticTableIndex.PathHome) with
+            | Some value -> "/index.html"
+            | None -> 
+                match headers.TryFind(HPack.StaticIndex StaticTableIndex.PathIndexHtml) with
+                | Some value -> "/index.html"
+                | None -> 
+                    match headers.TryFind(HPack.Key ":path") with
+                    | Some value -> 
+                        match value with 
+                        | Some value -> value
+                        | None -> failwith "unknown path"
+                    | None -> failwith "unknown path"
+
+        let acceptEncoding = 
+            match headers.TryFind(HPack.StaticIndex StaticTableIndex.AcceptEncodingGzipDeflate) with
+            | Some value ->     
+                if value.Value.Contains("deflate", StringComparison.InvariantCultureIgnoreCase) then
+                    ContentEncoding.Deflate
+                elif value.Value.Contains("gzip", StringComparison.InvariantCultureIgnoreCase) then
+                    ContentEncoding.GZip
+                else
+                    ContentEncoding.None
+            | None -> ContentEncoding.None
 
         {
-            Method = 
-                match headers.TryFind HeaderKey.Method with
-                | Some value ->  value :?> Method
-                | None -> failwith "no method"
-            Path = 
-                match headers.TryFind HeaderKey.Path with
-                | Some value ->  string value 
-                | None -> failwith "no path"
+            Method = method
+            Path = path
             HttpVersion = HttpVersion.Http2
-            AcceptEncoding = 
-                match headers.TryFind HeaderKey.AcceptEncoding with
-                | Some value ->  value :?> ContentEncoding
-                | None -> ContentEncoding.None
+            AcceptEncoding = acceptEncoding
             IfModifiedSince = None
         }

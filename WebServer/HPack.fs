@@ -86,8 +86,13 @@ module HPack =
             }                    
 
         decodeNextHeaderField ()
-        |> Seq.toList
-        
+        |> Seq.map (fun n ->
+            match n with
+            | FieldIndex fieldIndex -> (fieldIndex, None)
+            | Field field -> (field.Key, Some field.Value)
+        )
+        |> Map.ofSeq   
+
     let encode (headerFields: HeaderField list) =
         use memoryStream = new MemoryStream ()
         use binaryWriter = new BinaryWriter (memoryStream)

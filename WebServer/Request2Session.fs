@@ -6,6 +6,10 @@ open Header2
 
 module RequestSession =
     let MAGIC = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n"
+
+    /// Maximium header size allowed
+    let HTTP_MAX_HEADER_SIZE = 80 * 1024
+
     let asyncStart socketSession (networkStream: Stream) stopwatch =
         
         let mutable headerTableSize = 0
@@ -56,7 +60,6 @@ module RequestSession =
                 ()
             }
 
-
         let rec asyncReadNextFrame () = 
             async {
                 logger.lowTrace (fun () -> "Reading next frame")
@@ -76,8 +79,6 @@ module RequestSession =
                         header = headers
                         asyncSendBytes = asyncSendBytes
                     }                    
-                    //do! asyncProcessRequest headers.StreamId headerFields
-                    ()
                 | :? Settings as settings -> 
                     match settings.Values.TryFind(SettingsIdentifier.HEADER_TABLE_SIZE) with 
                     | Some hts -> headerTableSize <- hts
