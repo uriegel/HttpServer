@@ -86,7 +86,7 @@ module HPack =
             }                    
 
         decodeNextHeaderField ()
-        |> Seq.toArray
+        |> Seq.toList
         
     let encode (headerFields: HeaderField list) =
         use memoryStream = new MemoryStream ()

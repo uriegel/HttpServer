@@ -2,6 +2,7 @@
 
 open System.IO
 open System
+open Header2
 
 module RequestSession =
     let MAGIC = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n"
@@ -62,6 +63,7 @@ module RequestSession =
                     logger.lowTrace (fun () -> sprintf "%d - Headers, E: %A, flags: %A, weight: %d" headers.StreamId headers.E headers.Flags headers.Weight)
                     // TODO: Type Decoder in session, set properties like HEADER_TABLE_SIZE
                     let headerFields = HPack.decode headerStream
+                    let headers = createHeaderAccess headerFields
                     //do! asyncProcessRequest headers.StreamId headerFields
                     ()
                 | :? Settings as settings -> 

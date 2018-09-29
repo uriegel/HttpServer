@@ -13,6 +13,11 @@
     <Compile Include="ContentEncoding.fs" />
     <Compile Include="Header.fs" />
     <Compile Include="RequestHeaders.fs" />
+    <Compile Include="StaticTableIndex.fs" />
+    <Compile Include="HuffmanTree.fs" />
+    <Compile Include="Huffman.fs" />
+    <Compile Include="HPack.fs" />
+    <Compile Include="Header2.fs" />
     <Compile Include="Header11.fs" />
     <Compile Include="Configuration.fs" />
     <Compile Include="Request.fs" />
@@ -25,10 +30,6 @@
     <Compile Include="FileSystem.fs" />
     <Compile Include="RequestProcessing.fs" />
     <Compile Include="Request11Session.fs" />
-    <Compile Include="HuffmanTree.fs" />
-    <Compile Include="Huffman.fs" />
-    <Compile Include="StaticTableIndex.fs" />
-    <Compile Include="HPack.fs" />
     <Compile Include="Request2Session.fs" />
     <Compile Include="Processing.fs" />
     <Compile Include="Server.fs" />
