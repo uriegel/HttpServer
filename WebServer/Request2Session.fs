@@ -6,14 +6,14 @@ open Header2
 
 module RequestSession =
     let MAGIC = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n"
-    let asyncStart socketSessionId (networkStream: Stream) stopwatch =
+    let asyncStart socketSession (networkStream: Stream) stopwatch =
         
         let mutable headerTableSize = 0
         let mutable windowUpdate = 0
 
         let logger = {
-            log = Logger.log <| string socketSessionId
-            lowTrace = Logger.lowTrace <| string socketSessionId
+            log = Logger.log <| string socketSession.id
+            lowTrace = Logger.lowTrace <| string socketSession.id
         }
 
         let asyncReadFrame () = 
@@ -51,6 +51,12 @@ module RequestSession =
                 do! networkStream.AsyncWrite (bytes, 0, bytes.Length)
             }
 
+        let asyncSendBytes responseHeaders bytes = 
+            async {
+                ()
+            }
+
+
         let rec asyncReadNextFrame () = 
             async {
                 logger.lowTrace (fun () -> "Reading next frame")
@@ -64,6 +70,12 @@ module RequestSession =
                     // TODO: Type Decoder in session, set properties like HEADER_TABLE_SIZE
                     let headerFields = HPack.decode headerStream
                     let headers = createHeaderAccess headerFields
+
+                    do! RequestProcessing.asyncProcess socketSession {
+                        categoryLogger = logger
+                        header = headers
+                        asyncSendBytes = asyncSendBytes
+                    }                    
                     //do! asyncProcessRequest headers.StreamId headerFields
                     ()
                 | :? Settings as settings -> 

@@ -1,8 +1,6 @@
 namespace WebServer
-open ActivePatterns
 open System
 open HPack
-open System.Net
 
 module Header2 = 
     let createHeaderAccess headerFields = 

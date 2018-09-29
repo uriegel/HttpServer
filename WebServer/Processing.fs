@@ -82,7 +82,11 @@ module Processing =
                             stopwatch.Stop ()
                         let! result = 
                             if http2 then 
-                                RequestSession.asyncStart id networkStream stopwatch
+                                RequestSession.asyncStart {
+                                    id = id
+                                    remoteEndPoint = tcpClient.Client.RemoteEndPoint :?> IPEndPoint
+                                    isSecure = true
+                                } networkStream stopwatch
                             else 
                                 Request11Session.asyncStart {
                                     id = id
