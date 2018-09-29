@@ -1,7 +1,7 @@
 ﻿namespace WebServer
 
-open System.IO
 open System
+open System.IO
 open Header2
 
 module RequestSession =
@@ -55,10 +55,10 @@ module RequestSession =
                 do! networkStream.AsyncWrite (bytes, 0, bytes.Length)
             }
 
-        let asyncSendBytes request (responseHeaders: ResponseHeaderValue[]) bytes = 
+        let asyncSendBytes headerAccess streamId (responseHeaders: ResponseHeaderValue[]) (payload: byte[] option) = 
             async {
-                let responseHeaders = ResponseHeader.prepare request.header responseHeaders
-                let test = 
+                let responseHeaders = ResponseHeader.prepare headerAccess responseHeaders
+                let headerFields = 
                     responseHeaders
                     |> Array.map (fun n -> 
                         match n.key with
@@ -76,10 +76,32 @@ module RequestSession =
                         | HeaderKey.LastModified -> 
                             HPack.Field { Key = (HPack.StaticIndex StaticTableIndex.LastModified); Value = (n.value.Value :?> DateTime).ToString "R" } 
                         | _ -> failwith "Not supported"
+                    )
+                    |> Array.toList 
 
-                        //
-                    ) 
-                ()
+                let encodedHeaderFields = HPack.encode headerFields
+                let receiveHeaders = Headers.create streamId encodedHeaderFields true
+
+                let bytes = receiveHeaders.serialize ()
+                do! networkStream.AsyncWrite (bytes, 0, bytes.Length)
+
+                match payload with
+                | Some payload ->
+                    let bytes = Array.zeroCreate (payload.Length + 9)
+                    let lengthBytes = BitConverter.GetBytes payload.Length
+                    let streamIdBytes = BitConverter.GetBytes streamId
+                    bytes.[0] <- lengthBytes.[2]
+                    bytes.[1] <- lengthBytes.[1]
+                    bytes.[2] <- lengthBytes.[0]
+                    bytes.[3] <- byte FrameType.DATA
+                    bytes.[4] <- 1uy
+                    bytes.[5] <- streamIdBytes.[3] &&& ~~~1uy
+                    bytes.[6] <- streamIdBytes.[2]
+                    bytes.[7] <- streamIdBytes.[1]
+                    bytes.[8] <- streamIdBytes.[0]
+                    System.Array.Copy(payload, 0, bytes, 9, payload.Length)
+                    do! networkStream.AsyncWrite (bytes, 0, bytes.Length)
+                | None -> ()
             }
 
         let rec asyncReadNextFrame () = 
@@ -94,12 +116,12 @@ module RequestSession =
                     logger.lowTrace (fun () -> sprintf "%d - Headers, E: %A, flags: %A, weight: %d" headers.StreamId headers.E headers.Flags headers.Weight)
                     // TODO: Type Decoder in session, set properties like HEADER_TABLE_SIZE
                     let headerFields = HPack.decode headerStream
-                    let headers = createHeaderAccess headerFields
+                    let headerAccess = createHeaderAccess headerFields
 
                     do! RequestProcessing.asyncProcess socketSession {
                         categoryLogger = logger
-                        header = headers
-                        asyncSendBytes = asyncSendBytes
+                        header = headerAccess
+                        asyncSendBytes = asyncSendBytes headerAccess headers.StreamId
                     }                    
                 | :? Settings as settings -> 
                     match settings.Values.TryFind(SettingsIdentifier.HEADER_TABLE_SIZE) with 

@@ -55,5 +55,5 @@ module Response =
                 | Method.Head -> None
                 | _ -> Some bytes
 
-            do! request.asyncSendBytes request headers bytes
+            do! request.asyncSendBytes headers bytes
         }

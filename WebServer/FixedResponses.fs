@@ -13,7 +13,7 @@ module FixedResponses =
                     |> Array.append headers)
                 | None -> (None, headers)
 
-            do! request.asyncSendBytes request headers responseBytes
+            do! request.asyncSendBytes headers responseBytes
         }
 
     let asyncSendNotFound socketSession request =

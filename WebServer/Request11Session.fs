@@ -55,7 +55,7 @@ module Request11Session =
             | Some (headerString, alreadyRead) -> 
                 let headers = Header11.createHeaderAccess headerString
 
-                let asyncSendBytes request responseHeaders bytes = 
+                let asyncSendBytes responseHeaders bytes = 
                     async {
                         let responseHeaders = ResponseHeader.prepare headers responseHeaders
 
