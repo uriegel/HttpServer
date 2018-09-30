@@ -57,28 +57,39 @@ module RequestSession =
 
         let asyncSendBytes headerAccess streamId (responseHeaders: ResponseHeaderValue[]) (payload: byte[] option) = 
             async {
-                let responseHeaders = ResponseHeader.prepare headerAccess responseHeaders
-                let headerFields = 
+                // TODO: Status has to be an extra enum value | int value
+                let responseHeaders = 
+                    ResponseHeader.prepare headerAccess responseHeaders
+                    |> Array.toList
+                let status = 
                     responseHeaders
-                    |> Array.map (fun n -> 
+                    |> List.tryFind (fun n -> n.key = HeaderKey.StatusOK || n.key = HeaderKey.Status301 || n.key = HeaderKey.Status304 || n.key = HeaderKey.Status404) 
+                let status = status.Value
+                let responseHeaders1 =
+                    responseHeaders
+                    |> List.filter (fun n -> not (n = status))
+                let responseHeaders2 = status :: responseHeaders1
+
+                let headerFields = 
+                    responseHeaders2
+                    |> List.map (fun n -> 
                         match n.key with
                         | HeaderKey.StatusOK -> HPack.FieldIndex (HPack.StaticIndex StaticTableIndex.Status200)
                         | HeaderKey.Status404 -> HPack.FieldIndex (HPack.StaticIndex StaticTableIndex.Status404)
                         //| HeaderKey.Status301 -> HPack.FieldIndex (HPack.StaticIndex StaticTableIndex.Status301) // TODO: Gibts nicht
                         | HeaderKey.Status304 -> HPack.FieldIndex (HPack.StaticIndex StaticTableIndex.Status304)
-                        | HeaderKey.ContentType -> HPack.Field { Key = (HPack.StaticIndex StaticTableIndex.ContentType); Value = string n.value } 
-                        | HeaderKey.ContentLength -> HPack.Field { Key = (HPack.StaticIndex StaticTableIndex.ContentLength); Value = string n.value } 
-                        | HeaderKey.ContentEncoding -> HPack.Field { Key = (HPack.StaticIndex StaticTableIndex.ContentEncoding); Value = string n.value } 
-                        | HeaderKey.Expires -> HPack.Field { Key = (HPack.StaticIndex StaticTableIndex.Expires); Value = string n.value } 
+                        | HeaderKey.ContentType -> HPack.Field { Key = (HPack.StaticIndex StaticTableIndex.ContentType); Value = string n.value.Value } 
+                        | HeaderKey.ContentLength -> HPack.Field { Key = (HPack.StaticIndex StaticTableIndex.ContentLength); Value = string n.value.Value } 
+                        | HeaderKey.ContentEncoding -> HPack.Field { Key = (HPack.StaticIndex StaticTableIndex.ContentEncoding); Value = string n.value.Value } 
+                        | HeaderKey.Expires -> HPack.Field { Key = (HPack.StaticIndex StaticTableIndex.Expires); Value = string n.value.Value } 
                         | HeaderKey.Date -> 
                             HPack.Field { Key = (HPack.StaticIndex StaticTableIndex.Date); Value = (n.value.Value :?> DateTime).ToString "R" } 
-                        | HeaderKey.Server -> HPack.Field { Key = (HPack.StaticIndex StaticTableIndex.Server); Value = string n.value } 
+                        | HeaderKey.Server -> HPack.Field { Key = (HPack.StaticIndex StaticTableIndex.Server); Value = string n.value.Value } 
                         | HeaderKey.LastModified -> 
                             HPack.Field { Key = (HPack.StaticIndex StaticTableIndex.LastModified); Value = (n.value.Value :?> DateTime).ToString "R" } 
                         | _ -> failwith "Not supported"
                     )
-                    |> Array.toList 
-
+                
                 let encodedHeaderFields = HPack.encode headerFields
                 let receiveHeaders = Headers.create streamId encodedHeaderFields true
 
