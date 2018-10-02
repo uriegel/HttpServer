@@ -8,6 +8,8 @@ open Response
 open FixedResponses
 
 module FileSystem =
+    let configuration = Configuration.current.Force ()
+
     let (|IsFileSystem|_|) request = 
         let url = Uri.UnescapeDataString request.header.Path
         let (url, query) = 
@@ -34,21 +36,29 @@ module FileSystem =
                 path
         let localFile =
             try
-                Some <| Path.Combine (Configuration.Current.Webroot, relativePath)
+                Some <| Path.Combine (configuration.Webroot, relativePath)
             with 
             | e -> 
                 request.categoryLogger.log LogLevel.Trace <| sprintf "Invalid path: %s, %A" path e
                 None
+
+        let isTraversal (fileToCheck: string) = 
+            try
+                let fileInfo = FileInfo fileToCheck
+                not ((fileInfo.DirectoryName + "\\").StartsWith (configuration.Webroot, StringComparison.InvariantCultureIgnoreCase))
+            with
+            | _ -> false
+
         match localFile with
         | Some localFile -> 
             // protect for directory traversal attacks
-            if localFile.Length < Configuration.Current.Webroot.Length || not (localFile.StartsWith Configuration.Current.Webroot) then
+            if localFile.Length < configuration.Webroot.Length || not (isTraversal localFile) then
                 let warning = sprintf "POSSIBLE DIRECTORY TRAVERSAL ATTACK DETECTED! Url: %s" localFile
                 request.categoryLogger.log LogLevel.Warning warning
                 failwith warning
             match localFile with
             | _ when relativePath.Length = 0 -> 
-                let path = Path.Combine (Configuration.Current.Webroot, "index.html")
+                let path = Path.Combine (configuration.Webroot, "index.html")
                 if File.Exists path then
                     // let redirection = 
                     // match query with

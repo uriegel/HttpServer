@@ -3,12 +3,13 @@ open System
 open System.Collections.Generic
 
 module ResponseHeader =
+    let configuration = Configuration.current.Force ()
     let prepare requestHeaders (responseheaders: ResponseHeaderValue[]) =
         let headerList = new List<ResponseHeaderValue>()
         headerList.Add { key = HeaderKey.Date; value = Some (DateTime.Now.ToUniversalTime () :> obj) }
         headerList.Add { key = HeaderKey.Server; value = Some ("URiegel" :> obj) }
-        if Configuration.Current.XFrameOptions <> XFrameOptions.NotSet then
-            headerList.Add { key = HeaderKey.XFrameOptions; value = Some (Configuration.Current.XFrameOptions.ToString () :> obj) }
+        if configuration.XFrameOptions <> XFrameOptions.NotSet then
+            headerList.Add { key = HeaderKey.XFrameOptions; value = Some (configuration.XFrameOptions.ToString () :> obj) }
         // Not with LetsEncrypt
         // if (server.Configuration.HstsDurationInSeconds > 0)
         //     headers["Strict-Transport-Security"] = $"max-age={server.Configuration.HstsDurationInSeconds}";

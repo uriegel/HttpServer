@@ -3,12 +3,14 @@ open FileSystem
 open Microsoft.Extensions.Logging
 
 module RequestProcessing =
+    let configuration = Configuration.current.Force ()
+
     let asyncProcess socketSession request =
 
         let (|IsTlsRedirect|_|) request = 
             match socketSession.isSecure with
             | true -> None
-            | false when Configuration.Current.IsTlsEnabled -> Some true
+            | false when configuration.IsTlsEnabled -> Some true
             | false -> None
 
         async {
@@ -21,8 +23,8 @@ module RequestProcessing =
             // TODO: TLS-Redirect als Option, aber ACME für Certbot priorisieren
             | IsTlsRedirect value -> 
                 do! FixedResponses.asyncSendMovedPermanently socketSession request 
-                        ("https://" + Configuration.Current.DomainName + 
-                        (if Configuration.Current.TlsPort = 443 then "" else sprintf ":%d" Configuration.Current.TlsPort) + 
+                        ("https://" + configuration.DomainName + 
+                        (if configuration.TlsPort = 443 then "" else sprintf ":%d" configuration.TlsPort) + 
                         request.header.Path)
             | IsFileSystem value -> 
                 match value with

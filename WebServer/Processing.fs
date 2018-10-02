@@ -12,6 +12,7 @@ open System.Net
 open System.Diagnostics
 
 module Processing = 
+    let configuration = Configuration.current.Force ()
     let mutable private idSeed = 0
 
     let asyncStartReceiving (tcpClient: TcpClient) isSecure (stopwatch: Stopwatch) = 
@@ -28,16 +29,16 @@ module Processing =
                         EnabledSslProtocols = SslProtocols.Tls12,
                         AllowRenegotiation = false,
                         CertificateRevocationCheckMode = 
-                            if Configuration.Current.CheckRevocation then 
+                            if configuration.CheckRevocation then 
                                 X509RevocationMode.Online 
                             else 
                                 X509RevocationMode.NoCheck
                         ,
                         ClientCertificateRequired = false,
                         EncryptionPolicy = EncryptionPolicy.RequireEncryption,
-                        ServerCertificate = Configuration.Current.Certificate.Value,
+                        ServerCertificate = configuration.Certificate.Value,
                         ServerCertificateSelectionCallback = null)
-                if Configuration.Current.Http2 then
+                if configuration.Http2 then
                     authOptions.ApplicationProtocols.Add SslApplicationProtocol.Http2
                 authOptions.ApplicationProtocols.Add SslApplicationProtocol.Http11
                 do! sslStream.AuthenticateAsServerAsync (authOptions, CancellationToken false) |> Async.AwaitTask
@@ -64,8 +65,8 @@ module Processing =
         async {
             lowTrace (fun () -> sprintf "New %ssocket session created: - %A" (if isSecure then "secure " else "") tcpClient.Client.RemoteEndPoint)
             // TODO: Counter erhöhen
-            tcpClient.ReceiveTimeout <- Configuration.Current.SocketTimeout
-            tcpClient.SendTimeout <- Configuration.Current.SocketTimeout
+            tcpClient.ReceiveTimeout <- configuration.SocketTimeout
+            tcpClient.SendTimeout <- configuration.SocketTimeout
         
             let! (networkStream, http2) = 
                 if isSecure then 

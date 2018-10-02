@@ -2,8 +2,8 @@ namespace WebServer
 open System.Net
 open System.Security.Authentication
 
-type Configuration() = 
-    static member defaultConfiguration = { 
+module Configuration = 
+    let defaultConfiguration = { 
         LocalAddress = IPAddress.Any
         Webroot = ""
         SocketTimeout = 20000
@@ -23,12 +23,9 @@ type Configuration() =
         TlsProtocols = SslProtocols.Tls ||| SslProtocols.Tls11 ||| SslProtocols.Tls12
     }
 
-    static member val private current = Configuration.defaultConfiguration
-        with get, set
+    let mutable private initialConfiguration = defaultConfiguration
 
-    static member SetConfiguration configuration = 
-        Configuration.current <- configuration
+    let setConfiguration configuration = 
+        initialConfiguration <- configuration
 
-    static member Current 
-        with get() = Configuration.current
-
+    let current = lazy initialConfiguration

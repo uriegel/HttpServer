@@ -46,16 +46,20 @@ type InitializationData() =
             | _ -> SslProtocols.Tls ||| SslProtocols.Tls11 ||| SslProtocols.Tls12
 
 module Server =
+
     let private log = Logger.log "Server"
     let getPort () = 
-        match Configuration.Current.IsTlsEnabled with
-        | true when Configuration.Current.TlsPort = 443 -> ""
-        | true -> string Configuration.Current.TlsPort
-        | false when Configuration.Current.Port = 80 -> ""
-        | false -> string Configuration.Current.Port
+        let configuration = Configuration.current.Force ()
+
+        match configuration.IsTlsEnabled with
+        | true when configuration.TlsPort = 443 -> ""
+        | true -> string configuration.TlsPort
+        | false when configuration.Port = 80 -> ""
+        | false -> string configuration.Port
 
     let getBaseUrl () =
-        sprintf "http%s://%s%s" (if Configuration.Current.IsTlsEnabled then "s" else "") Configuration.Current.DomainName (getPort ())
+        let configuration = Configuration.current.Force ()
+        sprintf "http%s://%s%s" (if configuration.IsTlsEnabled then "s" else "") configuration.DomainName (getPort ())
     
     let mutable private isStarted = false
     let mutable private listener: TcpListener Option = None
@@ -93,7 +97,7 @@ module Server =
     let Start configuration = 
         if not isStarted then
             try
-                Configuration.SetConfiguration configuration
+                Configuration.setConfiguration configuration
                 // let getCertificate () = 
                 //     match configuration.IsTlsEnabled with
                 //     | true ->
@@ -118,29 +122,29 @@ module Server =
                 ServicePointManager.SecurityProtocol <- SecurityProtocolType.Tls12 ||| SecurityProtocolType.Tls11 ||| SecurityProtocolType.Tls 
                 ThreadPool.SetMinThreads (1000, 1000) |> ignore
 
-                log LogLevel.Information (sprintf "Socket timeout: %ds" (Configuration.Current.SocketTimeout / 1000))
-                log LogLevel.Information (sprintf "Domain name: %s" Configuration.Current.DomainName)
+                log LogLevel.Information (sprintf "Socket timeout: %ds" (configuration.SocketTimeout / 1000))
+                log LogLevel.Information (sprintf "Domain name: %s" configuration.DomainName)
 
-                if Configuration.Current.LocalAddress <> IPAddress.Any then
-                    log LogLevel.Information (sprintf "Binding to local address: %s" (Configuration.Current.LocalAddress.ToString ()))
+                if configuration.LocalAddress <> IPAddress.Any then
+                    log LogLevel.Information (sprintf "Binding to local address: %s" (configuration.LocalAddress.ToString ()))
         
                 let (listen, tlsListen) =
-                    if Configuration.Current.IsTlsEnabled then
+                    if configuration.IsTlsEnabled then
                         (configuration.TlsRedirect, true)
                     else
                         (true, false)
 
-                if Configuration.Current.IsTlsEnabled then
+                if configuration.IsTlsEnabled then
                     log LogLevel.Information (sprintf "Supported secure protocols: %A" configuration.TlsProtocols)
 
-                    match Configuration.Current.Certificate with
+                    match configuration.Certificate with
                     | Some certificate -> log LogLevel.Information (sprintf "Using certificate %A" certificate)
                     // TODO
                     // | None when (configuration.CertificateName <> null)
                     //      -> failwith (sprintf "No certificate with display name %A found" configuration.CertificateName)
                     | None -> failwith "No certificate specified"
 
-                    if Configuration.Current.CheckRevocation then 
+                    if configuration.CheckRevocation then 
                         log LogLevel.Information "Checking revocation lists"
 
                 log LogLevel.Information "Starting listener(s)..."
