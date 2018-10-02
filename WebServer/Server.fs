@@ -90,68 +90,33 @@ module Server =
         if not listener.Ipv6 then log LogLevel.Information "IPv6 or IPv6 dual mode not supported, switching to IPv4"
         listener.Listener
 
-    let Start (configuration: InitializationData) = 
+    let Start configuration = 
         if not isStarted then
             try
-                let getCertificate () = 
-                    match configuration.IsTlsEnabled with
-                    | true ->
-                        match configuration.Certificate with
-                        | null ->
-                            use store = new X509Store (StoreLocation.LocalMachine)
-                            store.Open OpenFlags.ReadOnly
-                            let certificate = 
-                                store.Certificates
-                                |> Seq.cast<X509Certificate2>
-                                |> Seq.filter (fun n -> n.FriendlyName = configuration.CertificateName)
-                                |> Seq.tryItem 0
-                            match certificate with
-                            | Some value -> Some value
-                            | None -> None
-                        | _ -> Some configuration.Certificate
-                    | false -> None
-
-                if configuration.HstsDurationInSeconds > 0 then
-                    if configuration.IsTlsEnabled && configuration.TlsRedirect then
-                        log LogLevel.Information (sprintf "Using HSTS: max-days=%A, max-age=%d" (configuration.HstsDurationInSeconds / (3600 * 24)) configuration.HstsDurationInSeconds)
-                    else
-                        log LogLevel.Warning "HSTS is only available when 'TlsEnabled=true' and 'TlsRedirect=true'"
-                        configuration.HstsDurationInSeconds <- 0
-
-                let toSettings (configuration: InitializationData) = {
-                    LocalAddress = configuration.LocalAddress
-                    Webroot = configuration.Webroot
-                    SocketTimeout = configuration.SocketTimeout
-                    Extensions = List.ofSeq configuration.Extensions
-                    DomainName = 
-                        match configuration.DomainName with
-                        | _ when System.String.IsNullOrEmpty configuration.DomainName -> (Dns.GetHostEntry (System.Environment.MachineName)).HostName
-                        | _ -> configuration.DomainName
-                    //member val AllowOrigins = .Array<string>[0] { get; set; }
-                    Port = if configuration.Port > 0 then configuration.Port else 80
-                    TlsPort = if configuration.TlsPort> 0 then configuration.TlsPort else 443
-                    IsTlsEnabled = configuration.IsTlsEnabled
-                    TlsRedirect = configuration.TlsRedirect
-                    Http2 = configuration.Http2
-                    Certificate = 
-                        if configuration.IsTlsEnabled then 
-                            getCertificate () 
-                        else 
-                            None
-                    CheckRevocation = configuration.CheckRevocation
-                    //member val  public string[] AppCaches { get; set; }
-                    //HstsDurationInSeconds = configuration.HstsDurationInSeconds
-                    XFrameOptions = configuration.XFrameOptions
-                    TlsProtocols = configuration.TlsProtocols
-                }
+                Configuration.SetConfiguration configuration
+                // let getCertificate () = 
+                //     match configuration.IsTlsEnabled with
+                //     | true ->
+                //         match configuration.Certificate with
+                //         | null ->
+                //             use store = new X509Store (StoreLocation.LocalMachine)
+                //             store.Open OpenFlags.ReadOnly
+                //             let certificate = 
+                //                 store.Certificates
+                //                 |> Seq.cast<X509Certificate2>
+                //                 |> Seq.filter (fun n -> n.FriendlyName = configuration.CertificateName)
+                //                 |> Seq.tryItem 0
+                //             match certificate with
+                //             | Some value -> Some value
+                //             | None -> None
+                //         | _ -> Some configuration.Certificate
+                //     | false -> None
 
                 log LogLevel.Information "Starting Web Server"
 
                 ServicePointManager.DefaultConnectionLimit <- 1000 
                 ServicePointManager.SecurityProtocol <- SecurityProtocolType.Tls12 ||| SecurityProtocolType.Tls11 ||| SecurityProtocolType.Tls 
                 ThreadPool.SetMinThreads (1000, 1000) |> ignore
-
-                Configuration.Initialize (toSettings configuration)
 
                 log LogLevel.Information (sprintf "Socket timeout: %ds" (Configuration.Current.SocketTimeout / 1000))
                 log LogLevel.Information (sprintf "Domain name: %s" Configuration.Current.DomainName)
@@ -170,8 +135,9 @@ module Server =
 
                     match Configuration.Current.Certificate with
                     | Some certificate -> log LogLevel.Information (sprintf "Using certificate %A" certificate)
-                    | None when (configuration.CertificateName <> null)
-                         -> failwith (sprintf "No certificate with display name %A found" configuration.CertificateName)
+                    // TODO
+                    // | None when (configuration.CertificateName <> null)
+                    //      -> failwith (sprintf "No certificate with display name %A found" configuration.CertificateName)
                     | None -> failwith "No certificate specified"
 
                     if Configuration.Current.CheckRevocation then 
