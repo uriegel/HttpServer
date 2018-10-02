@@ -15,9 +15,7 @@ let main argv =
     Logger.lowTraceEnabled <- true
     let configuration = { 
             Configuration.defaultConfiguration with 
-                Webroot = @"C:\Users\urieg\source\repos\ingorico\ingorico"
-                //Webroot = "/home/pi/test/WebServer/web/Reitbeteiligung"
-                //Webroot = @"C:\Program Files\caesar\CAEWebSrv\web"
+                Webroot = "../webroot"
                 //IsTlsEnabled = true
                 TlsRedirect = true
                 //TlsPort = 4433
