@@ -10,9 +10,6 @@ module ResponseHeader =
         headerList.Add { key = HeaderKey.Server; value = Some ("URiegel" :> obj) }
         if configuration.XFrameOptions <> XFrameOptions.NotSet then
             headerList.Add { key = HeaderKey.XFrameOptions; value = Some (configuration.XFrameOptions.ToString () :> obj) }
-        // Not with LetsEncrypt
-        // if (server.Configuration.HstsDurationInSeconds > 0)
-        //     headers["Strict-Transport-Security"] = $"max-age={server.Configuration.HstsDurationInSeconds}";
         // if (server.Configuration.AllowOrigins != null)
         // {
         //     var origin = requestHeaders["origin"];

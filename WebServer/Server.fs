@@ -94,28 +94,18 @@ module Server =
         if not listener.Ipv6 then log LogLevel.Information "IPv6 or IPv6 dual mode not supported, switching to IPv4"
         listener.Listener
 
+    let getCertificate name = 
+        use store = new X509Store (StoreLocation.LocalMachine)
+        store.Open OpenFlags.ReadOnly
+        store.Certificates
+        |> Seq.cast<X509Certificate2>
+        |> Seq.filter (fun n -> n.FriendlyName = name)
+        |> Seq.tryItem 0
+
     let Start configuration = 
         if not isStarted then
             try
                 Configuration.setConfiguration configuration
-                // let getCertificate () = 
-                //     match configuration.IsTlsEnabled with
-                //     | true ->
-                //         match configuration.Certificate with
-                //         | null ->
-                //             use store = new X509Store (StoreLocation.LocalMachine)
-                //             store.Open OpenFlags.ReadOnly
-                //             let certificate = 
-                //                 store.Certificates
-                //                 |> Seq.cast<X509Certificate2>
-                //                 |> Seq.filter (fun n -> n.FriendlyName = configuration.CertificateName)
-                //                 |> Seq.tryItem 0
-                //             match certificate with
-                //             | Some value -> Some value
-                //             | None -> None
-                //         | _ -> Some configuration.Certificate
-                //     | false -> None
-
                 log LogLevel.Information "Starting Web Server"
 
                 ServicePointManager.DefaultConnectionLimit <- 1000 

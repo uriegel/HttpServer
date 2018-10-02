@@ -11,6 +11,8 @@ let main argv =
     file.Read (beits, 0, beits.Length) |> ignore
     let certificate = new X509Certificate2 (beits, "uwe")
 
+    let certificate1 = Server.getCertificate "CAESAR"
+
     Logger.lowTraceEnabled <- true
     let configuration = { 
             Configuration.defaultConfiguration with 
@@ -21,8 +23,7 @@ let main argv =
                 TlsRedirect = true
                 //TlsPort = 4433
                 //Http2 = true
-//CertificateName = "CAESAR"
-                Certificate = Some certificate
+                Certificate = certificate1
                 //DomainName = "uriegel.de"
                 DomainName = "cas-ws121013.caseris.intern"                
         }

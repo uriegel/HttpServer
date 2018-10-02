@@ -17,17 +17,6 @@ module FileSystem =
             | SplitChar '?' (path, query) -> (path, Some query)
             | _ -> (url, None)
                             
-        //         var alias = Server.Configuration.Aliases.FirstOrDefault(n => url.StartsWith(n.Value));
-        // if (alias != null)
-        // {
-        //     relativePath = localURL.Substring(alias.Value.Length).Replace('/', '\\');
-
-        //     if (alias.IsRooted)
-        //         rootDirectory = alias.Path;
-        //     else
-        //         rootDirectory = Path.Combine(rootDirectory, alias.Path);
-        // }
-
         let path = url.Replace ('/', '\\')
         let relativePath = 
             if path.StartsWith @"\" then
@@ -51,7 +40,6 @@ module FileSystem =
 
         match localFile with
         | Some localFile -> 
-            // protect for directory traversal attacks
             if localFile.Length < configuration.Webroot.Length || not (isTraversal localFile) then
                 let warning = sprintf "POSSIBLE DIRECTORY TRAVERSAL ATTACK DETECTED! Url: %s" localFile
                 request.categoryLogger.log LogLevel.Warning warning
@@ -60,10 +48,6 @@ module FileSystem =
             | _ when relativePath.Length = 0 -> 
                 let path = Path.Combine (configuration.Webroot, "index.html")
                 if File.Exists path then
-                    // let redirection = 
-                    // match query with
-                    // | Some value -> "/?" + value
-                    // | None -> "/"
                     Some <| FileSystemType.File { Path = path; Query = query }
                 else
                     None
@@ -72,7 +56,6 @@ module FileSystem =
                 if not (url.EndsWith "/") then
                     Some <| Redirection (url + "/" + match query with | Some value -> "?" + value | None -> "")
                 else
-                    // localFile = Path.Combine(localFile, alias?.DefaultFile ?? "index.html");
                     let localFile = Path.Combine (localFile, "index.html")
                     if File.Exists localFile then
                         Some <| FileSystemType.File { Path = localFile; Query = query} 
