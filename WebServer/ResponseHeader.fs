@@ -8,8 +8,8 @@ module ResponseHeader =
         let headerList = new List<ResponseHeaderValue>()
         headerList.Add { key = HeaderKey.Date; value = Some (DateTime.Now.ToUniversalTime () :> obj) }
         headerList.Add { key = HeaderKey.Server; value = Some ("URiegel" :> obj) }
-        if configuration.XFrameOptions <> XFrameOptions.NotSet then
-            headerList.Add { key = HeaderKey.XFrameOptions; value = Some (configuration.XFrameOptions.ToString () :> obj) }
+        if configuration.xFrameOptions <> XFrameOptions.NotSet then
+            headerList.Add { key = HeaderKey.XFrameOptions; value = Some (configuration.xFrameOptions.ToString () :> obj) }
         // if (server.Configuration.AllowOrigins != null)
         // {
         //     var origin = requestHeaders["origin"];

@@ -51,15 +51,15 @@ module Server =
     let getPort () = 
         let configuration = Configuration.current.Force ()
 
-        match configuration.IsTlsEnabled with
-        | true when configuration.TlsPort = 443 -> ""
-        | true -> string configuration.TlsPort
-        | false when configuration.Port = 80 -> ""
-        | false -> string configuration.Port
+        match configuration.isTlsEnabled with
+        | true when configuration.tlsPort = 443 -> ""
+        | true -> string configuration.tlsPort
+        | false when configuration.port = 80 -> ""
+        | false -> string configuration.port
 
     let getBaseUrl () =
         let configuration = Configuration.current.Force ()
-        sprintf "http%s://%s%s" (if configuration.IsTlsEnabled then "s" else "") configuration.DomainName (getPort ())
+        sprintf "http%s://%s%s" (if configuration.isTlsEnabled then "s" else "") configuration.domainName (getPort ())
     
     let mutable private isStarted = false
     let mutable private listener: TcpListener Option = None
@@ -112,41 +112,41 @@ module Server =
                 ServicePointManager.SecurityProtocol <- SecurityProtocolType.Tls12 ||| SecurityProtocolType.Tls11 ||| SecurityProtocolType.Tls 
                 ThreadPool.SetMinThreads (1000, 1000) |> ignore
 
-                log LogLevel.Information (sprintf "Socket timeout: %ds" (configuration.SocketTimeout / 1000))
-                log LogLevel.Information (sprintf "Domain name: %s" configuration.DomainName)
+                log LogLevel.Information (sprintf "Socket timeout: %ds" (configuration.socketTimeout / 1000))
+                log LogLevel.Information (sprintf "Domain name: %s" configuration.domainName)
 
-                if configuration.LocalAddress <> IPAddress.Any then
-                    log LogLevel.Information (sprintf "Binding to local address: %s" (configuration.LocalAddress.ToString ()))
+                if configuration.localAddress <> IPAddress.Any then
+                    log LogLevel.Information (sprintf "Binding to local address: %s" (configuration.localAddress.ToString ()))
         
                 let (listen, tlsListen) =
-                    if configuration.IsTlsEnabled then
-                        (configuration.TlsRedirect, true)
+                    if configuration.isTlsEnabled then
+                        (configuration.tlsRedirect, true)
                     else
                         (true, false)
 
-                if configuration.IsTlsEnabled then
-                    log LogLevel.Information (sprintf "Supported secure protocols: %A" configuration.TlsProtocols)
+                if configuration.isTlsEnabled then
+                    log LogLevel.Information (sprintf "Supported secure protocols: %A" configuration.tlsProtocols)
 
-                    match configuration.Certificate with
+                    match configuration.certificate with
                     | Some certificate -> log LogLevel.Information (sprintf "Using certificate %A" certificate)
                     // TODO
                     // | None when (configuration.CertificateName <> null)
                     //      -> failwith (sprintf "No certificate with display name %A found" configuration.CertificateName)
                     | None -> failwith "No certificate specified"
 
-                    if configuration.CheckRevocation then 
+                    if configuration.checkRevocation then 
                         log LogLevel.Information "Checking revocation lists"
 
                 log LogLevel.Information "Starting listener(s)..."
                 isStarted <- true
                 if listen then 
-                    log LogLevel.Information (sprintf "Starting listener on port %d" configuration.Port)
-                    listener <- Some (createListener configuration.Port)
+                    log LogLevel.Information (sprintf "Starting listener on port %d" configuration.port)
+                    listener <- Some (createListener configuration.port)
                     listener.Value.Start ()
                     asyncStartConnecting listener.Value false |> Async.StartImmediate
                 if tlsListen then 
-                    log LogLevel.Information (sprintf "Starting secure listener on port %d" configuration.TlsPort)
-                    tlsListener <- Some (createListener configuration.TlsPort)
+                    log LogLevel.Information (sprintf "Starting secure listener on port %d" configuration.tlsPort)
+                    tlsListener <- Some (createListener configuration.tlsPort)
                     tlsListener.Value.Start ()
                     asyncStartConnecting tlsListener.Value true |> Async.StartImmediate
                 

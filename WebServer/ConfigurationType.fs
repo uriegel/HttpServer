@@ -10,22 +10,23 @@ type XFrameOptions =
     | SAMEORIGIN= 2
 
 type ConfigurationType = {
-    LocalAddress: IPAddress
-    Webroot: string
-    SocketTimeout: int
-    //Extensions = []
-    DomainName: string
+    localAddress: IPAddress
+    webroot: string
+    socketTimeout: int
+    domainName: string
     //member val AllowOrigins = .Array<string>[0] { get; set; }
-    Port: int
-    TlsPort: int
-    IsTlsEnabled: bool
-    TlsRedirect: bool
-    Http2: bool
-    Certificate: X509Certificate2 Option
-    CheckRevocation: bool
+    port: int
+    tlsPort: int
+    isTlsEnabled: bool
+    tlsRedirect: bool
+    http2: bool
+    certificate: X509Certificate2 Option
+    checkRevocation: bool
     //member val  public string[] AppCaches { get; set; }
     // HstsDurationInSeconds = 0 // Not with LetsEncrypt
-    XFrameOptions: XFrameOptions
-    TlsProtocols: SslProtocols
+    xFrameOptions: XFrameOptions
+    tlsProtocols: SslProtocols
+    checkRequest: RequestHeaders->bool
+    request: RequestHeaders->unit
 }
 

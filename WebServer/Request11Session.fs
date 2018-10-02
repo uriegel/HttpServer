@@ -95,7 +95,7 @@ module Request11Session =
                                 | _ -> failwith "No status"
 
                         let headerStrings = headersToSerialize |> Array.map createHeaderStringValue
-                        let headerString = Header.getHttpVersionAsString headers.HttpVersion + " " + (createStatus ()) + "\r\n" 
+                        let headerString = Header.getHttpVersionAsString headers.httpVersion + " " + (createStatus ()) + "\r\n" 
                                             + System.String.Join ("\r\n", headerStrings) + "\r\n\r\n" 
                         let headerBytes = Encoding.UTF8.GetBytes headerString
                         do! networkStream.AsyncWrite (headerBytes, 0, headerBytes.Length)

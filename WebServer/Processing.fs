@@ -29,16 +29,16 @@ module Processing =
                         EnabledSslProtocols = SslProtocols.Tls12,
                         AllowRenegotiation = false,
                         CertificateRevocationCheckMode = 
-                            if configuration.CheckRevocation then 
+                            if configuration.checkRevocation then 
                                 X509RevocationMode.Online 
                             else 
                                 X509RevocationMode.NoCheck
                         ,
                         ClientCertificateRequired = false,
                         EncryptionPolicy = EncryptionPolicy.RequireEncryption,
-                        ServerCertificate = configuration.Certificate.Value,
+                        ServerCertificate = configuration.certificate.Value,
                         ServerCertificateSelectionCallback = null)
-                if configuration.Http2 then
+                if configuration.http2 then
                     authOptions.ApplicationProtocols.Add SslApplicationProtocol.Http2
                 authOptions.ApplicationProtocols.Add SslApplicationProtocol.Http11
                 do! sslStream.AuthenticateAsServerAsync (authOptions, CancellationToken false) |> Async.AwaitTask
@@ -65,8 +65,8 @@ module Processing =
         async {
             lowTrace (fun () -> sprintf "New %ssocket session created: - %A" (if isSecure then "secure " else "") tcpClient.Client.RemoteEndPoint)
             // TODO: Counter erhöhen
-            tcpClient.ReceiveTimeout <- configuration.SocketTimeout
-            tcpClient.SendTimeout <- configuration.SocketTimeout
+            tcpClient.ReceiveTimeout <- configuration.socketTimeout
+            tcpClient.SendTimeout <- configuration.socketTimeout
         
             let! (networkStream, http2) = 
                 if isSecure then 

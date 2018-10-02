@@ -9,9 +9,9 @@ open FixedResponses
 
 module FileSystem =
     let configuration = Configuration.current.Force ()
-    let webroot = (FileInfo configuration.Webroot).FullName
+    let webroot = (FileInfo configuration.webroot).FullName
     let (|IsFileSystem|_|) request = 
-        let url = Uri.UnescapeDataString request.header.Path
+        let url = Uri.UnescapeDataString request.header.path
         let (url, query) = 
             match url with
             | SplitChar '?' (path, query) -> (path, Some query)
@@ -83,10 +83,10 @@ module FileSystem =
             async {
                 let info = FileInfo fileType.Path
                 let notModified = 
-                    match request.header.IfModifiedSince with
+                    match request.header.ifModifiedSince with
                     | Some value ->
                         let fileTime = info.LastWriteTime.AddTicks -(info.LastWriteTime.Ticks % (TimeSpan.FromSeconds 1.0).Ticks)
-                        let diff = fileTime - request.header.IfModifiedSince.Value
+                        let diff = fileTime - request.header.ifModifiedSince.Value
                         diff <= TimeSpan.FromMilliseconds 0.0 
                     | None -> false
 

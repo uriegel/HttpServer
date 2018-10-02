@@ -48,15 +48,15 @@ module Header11 =
             DateTime.Parse (value.Trim ())
 
         {
-            Method = method
-            Path = path 
-            HttpVersion = httpVersion
-            AcceptEncoding = 
+            method = method
+            path = path 
+            httpVersion = httpVersion
+            acceptEncoding = 
                 match getHeaderValue HeaderKey.AcceptEncoding with
                 | Some value when value.Contains("deflate") -> ContentEncoding.Deflate
                 | Some value when value.Contains("gzip") -> ContentEncoding.GZip
                 | _ -> ContentEncoding.None
-            IfModifiedSince = 
+            ifModifiedSince = 
                 match getHeaderValue HeaderKey.IfModifiedSince with
                 | Some value -> Some (parseModifiedTime value)
                 | _ -> None

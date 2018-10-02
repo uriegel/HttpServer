@@ -3,6 +3,11 @@ open System.IO
 open System.Security.Cryptography.X509Certificates
 open WebServer
 
+let checkRequest requestHeaders = requestHeaders.path.StartsWith ("/Commander")
+
+let request requestHeaders = 
+    ()
+
 [<EntryPoint>]
 let main argv =
     let certificateFile = Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.UserProfile), "certificate.pfx")
@@ -15,14 +20,16 @@ let main argv =
     Logger.lowTraceEnabled <- true
     let configuration = { 
             Configuration.defaultConfiguration with 
-                Webroot = "../webroot"
+                webroot = "../webroot"
                 //IsTlsEnabled = true
-                TlsRedirect = true
+                tlsRedirect = true
                 //TlsPort = 4433
                 //Http2 = true
-                Certificate = certificate
+                certificate = certificate
                 //DomainName = "uriegel.de"
-                DomainName = "cas-ws121013.caseris.intern"                
+                domainName = "cas-ws121013.caseris.intern"                
+                checkRequest = checkRequest
+                request = request
         }
     Server.Start configuration
     printfn "Press any key to stop..."

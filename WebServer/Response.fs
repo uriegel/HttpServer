@@ -23,7 +23,7 @@ module Response =
             ms.Capacity <- int ms.Length
             (ms.GetBuffer (), headers |> Array.append [|{ key = HeaderKey.ContentEncoding; value = Some compressionMethod }|])
 
-        match request.header.AcceptEncoding with
+        match request.header.acceptEncoding with
         | ContentEncoding.Deflate when compress -> 
             compressStream (fun stream -> new DeflateStream (stream, System.IO.Compression.CompressionMode.Compress, true) :> Stream ) "deflate"
         | ContentEncoding.GZip when compress -> 
@@ -51,7 +51,7 @@ module Response =
             // }
 
             let bytes = 
-                match request.header.Method with
+                match request.header.method with
                 | Method.Head -> None
                 | _ -> Some bytes
 

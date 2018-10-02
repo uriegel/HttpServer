@@ -45,9 +45,9 @@ module Header2 =
             | None -> ContentEncoding.None
 
         {
-            Method = method
-            Path = path
-            HttpVersion = HttpVersion.Http2
-            AcceptEncoding = acceptEncoding
-            IfModifiedSince = None
+            method = method
+            path = path
+            httpVersion = HttpVersion.Http2
+            acceptEncoding = acceptEncoding
+            ifModifiedSince = None
         }
