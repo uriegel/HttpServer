@@ -5,8 +5,8 @@ button.onclick = () => {
     request.onload = evt => {
         console.log("Ein Ereignis", evt)
     }
-    const path = 'c:\\windows\\system32'
+    const path = 'get?path=c:\\windows\\system32&isVisible=false'
     const encodedPath = encodeURI(path)
-    request.open('Get', `Commander?get=${encodedPath}`, true)
+    request.open('Get', `Commander/${encodedPath}`, true)
     request.send()
 }

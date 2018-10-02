@@ -1,12 +1,28 @@
 ﻿open System
 open System.IO
+open System.Runtime.Serialization
 open System.Security.Cryptography.X509Certificates
 open WebServer
 
 let checkRequest requestHeaders = requestHeaders.path.StartsWith ("/Commander")
 
-let request requestHeaders = 
-    ()
+[<DataContract>]
+type Affe = {
+    [<field: DataMember>]
+    name: string
+    [<field: DataMember>]
+    email: string
+}
+
+let request (request: Request) = 
+    let urlQuery = UrlQuery.create request.header.path
+    let path = urlQuery.Query "path"
+    let isVisble = urlQuery.Query "isVisible"
+
+    request.asyncSendJson ({
+        name = "Uwe"
+        email = "uriegel@hotmail.de"
+    } :> obj)
 
 [<EntryPoint>]
 let main argv =

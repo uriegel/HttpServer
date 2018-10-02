@@ -23,10 +23,9 @@ type ConfigurationType = {
     certificate: X509Certificate2 Option
     checkRevocation: bool
     //member val  public string[] AppCaches { get; set; }
-    // HstsDurationInSeconds = 0 // Not with LetsEncrypt
     xFrameOptions: XFrameOptions
     tlsProtocols: SslProtocols
     checkRequest: RequestHeaders->bool
-    request: RequestHeaders->unit
+    request: Request->Async<unit>
 }
 

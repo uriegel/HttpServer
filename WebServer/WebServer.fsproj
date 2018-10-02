@@ -4,6 +4,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="ActivePattern.fs" />
+    <Compile Include="UrlQuery.fs" />
     <Compile Include="Frame.fs" />
     <Compile Include="Ipv6TcpListenerFactory.fs" />
     <Compile Include="MimeTypes.fs" />
@@ -19,9 +20,9 @@
     <Compile Include="HPack.fs" />
     <Compile Include="Header2.fs" />
     <Compile Include="Header11.fs" />
+    <Compile Include="Request.fs" />
     <Compile Include="ConfigurationType.fs" />
     <Compile Include="Configuration.fs" />
-    <Compile Include="Request.fs" />
     <Compile Include="ResponseHeader.fs" />
     <Compile Include="SocketSession.fs" />
     <Compile Include="Html.fs" />

@@ -104,11 +104,14 @@ module Request11Session =
                         | _ -> ()
                     }
 
-                do! RequestProcessing.asyncProcess socketSession {
+                let request = {
                     categoryLogger = logger
                     header = headers
                     asyncSendBytes = asyncSendBytes
+                    asyncSendJson = Response.asyncSendJson asyncSendBytes
                 }
+
+                do! RequestProcessing.asyncProcess socketSession request
                 let timeSpan = stopwatch.Elapsed
                 logger.lowTrace (fun () -> sprintf "Request processed in %A" timeSpan)
                 return true

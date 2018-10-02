@@ -21,7 +21,7 @@ module Configuration =
         xFrameOptions = XFrameOptions.NotSet
         tlsProtocols = SslProtocols.Tls ||| SslProtocols.Tls11 ||| SslProtocols.Tls12
         checkRequest = fun requestHeaders -> false
-        request = fun requestHeaders -> ()
+        request = fun requestHeaders -> async { () }
     }
 
     let mutable private initialConfiguration = defaultConfiguration

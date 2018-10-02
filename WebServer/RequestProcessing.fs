@@ -31,7 +31,7 @@ module RequestProcessing =
                         ("https://" + configuration.domainName + 
                         (if configuration.tlsPort = 443 then "" else sprintf ":%d" configuration.tlsPort) + 
                         request.header.path)
-            | CheckExtension value -> configuration.request request.header
+            | CheckExtension value -> do! configuration.request request
             | IsFileSystem value -> 
                 match value with
                 | File value -> do! serveFileSystem socketSession request value
