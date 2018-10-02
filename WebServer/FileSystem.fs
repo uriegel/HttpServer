@@ -34,13 +34,13 @@ module FileSystem =
         let isTraversal (fileToCheck: string) = 
             try
                 let fileInfo = FileInfo fileToCheck
-                not ((fileInfo.DirectoryName + "\\").StartsWith (configuration.Webroot, StringComparison.InvariantCultureIgnoreCase))
+                not (fileInfo.FullName.StartsWith (configuration.Webroot, StringComparison.InvariantCultureIgnoreCase))
             with
             | _ -> false
 
         match localFile with
         | Some localFile -> 
-            if localFile.Length < configuration.Webroot.Length || not (isTraversal localFile) then
+            if localFile.Length < configuration.Webroot.Length || isTraversal localFile then
                 let warning = sprintf "POSSIBLE DIRECTORY TRAVERSAL ATTACK DETECTED! Url: %s" localFile
                 request.categoryLogger.log LogLevel.Warning warning
                 failwith warning
