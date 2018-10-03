@@ -32,3 +32,16 @@ module FixedResponses =
         )
         |> Response.insertHtml
         |> Response.asyncSendBytes
+
+    let asyncSendSseAccept socketSession request =
+        request.categoryLogger.lowTrace <| fun () -> "Accepting SSE request"
+        (
+            request,
+            [ 
+                { key = HeaderKey.StatusOK; value = None }
+                { key = HeaderKey.ContentType; value = Some ("txt/event-stream" :> obj) }
+                { key = HeaderKey.TransferEncoding; value = Some ("chunked" :> obj) }
+            ],
+            None
+        )
+        |> Response.asyncSendBytes

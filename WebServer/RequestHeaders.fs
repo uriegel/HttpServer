@@ -7,4 +7,5 @@ type RequestHeaders = {
     httpVersion: HttpVersion
     acceptEncoding: ContentEncoding
     ifModifiedSince: DateTime option
+    getValue: HeaderKey->(string option)
 }

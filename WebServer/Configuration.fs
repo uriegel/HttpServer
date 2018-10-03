@@ -22,6 +22,7 @@ module Configuration =
         tlsProtocols = SslProtocols.Tls ||| SslProtocols.Tls11 ||| SslProtocols.Tls12
         checkRequest = fun requestHeaders -> false
         request = fun requestHeaders -> async { () }
+        sseCallback = None
     }
 
     let mutable private initialConfiguration = defaultConfiguration

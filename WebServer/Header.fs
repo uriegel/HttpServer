@@ -22,6 +22,8 @@ type HeaderKey =
     | Expires = 16
     | LastModified = 17
     | CacheControl = 18
+    | Accept = 19
+    | TransferEncoding = 20
 
 type HttpVersion = 
     | Http1 = 0

@@ -50,4 +50,5 @@ module Header2 =
             httpVersion = HttpVersion.Http2
             acceptEncoding = acceptEncoding
             ifModifiedSince = None
+            getValue = (fun headerKey -> None)
         }

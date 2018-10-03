@@ -18,6 +18,17 @@ module RequestProcessing =
             | true -> Some true
             | false -> None
 
+        let (|CheckSse|_|) request = 
+            match configuration.sseCallback  with
+            | Some value -> 
+                match request.header.getValue HeaderKey.Accept with
+                | Some acceptValue -> 
+                    match acceptValue with
+                    | "text/event-stream" -> Some true 
+                    | _ -> None
+                | None -> None
+            | None -> None
+
         async {
             request.categoryLogger.log LogLevel.Trace (sprintf "Request: %A %s %s %s%s" socketSession.remoteEndPoint 
                 (string request.header.method) request.header.path 
@@ -31,10 +42,11 @@ module RequestProcessing =
                         ("https://" + configuration.domainName + 
                         (if configuration.tlsPort = 443 then "" else sprintf ":%d" configuration.tlsPort) + 
                         request.header.path)
-            | CheckExtension value -> do! configuration.request request
+            | CheckExtension _ -> do! configuration.request request
             | IsFileSystem value -> 
                 match value with
                 | File value -> do! serveFileSystem socketSession request value
                 | Redirection value -> do! FixedResponses.asyncSendMovedPermanently socketSession request value
+            | CheckSse _ -> do! FixedResponses.asyncSendSseAccept socketSession request
             | _ -> do! FixedResponses.asyncSendNotFound socketSession request
         }

@@ -16,6 +16,9 @@ type Affe = {
     nothing: string
 }
 
+let sseCallback _ =
+    async {()}
+
 let request (request: Request) = 
     let urlQuery = UrlQuery.create request.header.path
     let path = urlQuery.Query "path"
@@ -48,6 +51,7 @@ let main argv =
                 domainName = "cas-ws121013.caseris.intern"                
                 checkRequest = checkRequest
                 request = request
+                sseCallback = Some sseCallback
         }
     Server.Start configuration
     printfn "Press any key to stop..."

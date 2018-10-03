@@ -33,9 +33,10 @@ module Header11 =
                 match headerKey with
                 | HeaderKey.AcceptEncoding -> "accept-encoding"
                 | HeaderKey.IfModifiedSince -> "if-modified-since"
+                | HeaderKey.Accept -> "accept"
                 | _ -> ""
             match headerParts |> Seq.tryFind (fun n -> (n.ToLower ()).StartsWith searchKey) with
-            | Some value -> Some (value.Substring ((value.IndexOf ": ") + 1))
+            | Some value -> Some (value.Substring ((value.IndexOf ": ") + 2))
             | None -> None
 
         let parseModifiedTime (value: string) = 
@@ -60,6 +61,7 @@ module Header11 =
                 match getHeaderValue HeaderKey.IfModifiedSince with
                 | Some value -> Some (parseModifiedTime value)
                 | _ -> None
+            getValue = getHeaderValue
         }
 
             
