@@ -27,6 +27,6 @@ type ConfigurationType = {
     tlsProtocols: SslProtocols
     checkRequest: RequestHeaders->bool
     request: Request->Async<unit>
-    sseCallback: (Request->Async<unit>) option
+    sseCallback: ((string->Async<unit>)->unit) option
 }
 

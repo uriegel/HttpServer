@@ -75,7 +75,7 @@ module Request11Session =
                                 | HeaderKey.ContentEncoding -> "Content-Encoding"
                                 | HeaderKey.Expires -> "Expires"
                                 | HeaderKey.LastModified -> "Last-Modified"
-                                | HeaderKey.TransferEncoding -> "Transfer-Encoding"
+                                | HeaderKey.Connection -> "Connection"
                                 | _ -> responseHeaderValue.key.ToString ()
                             let value = 
                                 match responseHeaderValue.value with
@@ -105,10 +105,14 @@ module Request11Session =
                         | _ -> ()
                     }
 
+                let asyncSendRaw bytes = 
+                    networkStream.AsyncWrite (bytes, 0, bytes.Length)
+
                 let request = {
                     categoryLogger = logger
                     header = headers
                     asyncSendBytes = asyncSendBytes
+                    asyncSendRaw = asyncSendRaw
                 }
 
                 do! RequestProcessing.asyncProcess socketSession request

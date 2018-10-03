@@ -23,7 +23,7 @@ type HeaderKey =
     | LastModified = 17
     | CacheControl = 18
     | Accept = 19
-    | TransferEncoding = 20
+    | Connection = 20
 
 type HttpVersion = 
     | Http1 = 0

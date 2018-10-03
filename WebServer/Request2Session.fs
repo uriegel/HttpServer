@@ -132,6 +132,7 @@ module RequestSession =
                         categoryLogger = logger
                         header = headerAccess
                         asyncSendBytes = asyncSendBytes headerAccess headers.StreamId
+                        asyncSendRaw = fun b -> async{()}
                     }                    
                 | :? Settings as settings -> 
                     match settings.Values.TryFind(SettingsIdentifier.HEADER_TABLE_SIZE) with 

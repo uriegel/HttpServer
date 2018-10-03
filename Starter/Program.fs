@@ -16,8 +16,10 @@ type Affe = {
     nothing: string
 }
 
-let sseCallback _ =
-    async {()}
+let mutable sendEvent = fun b -> async{()}
+
+let sseCallback sendEventArg =
+    sendEvent <- sendEventArg
 
 let request (request: Request) = 
     let urlQuery = UrlQuery.create request.header.path
@@ -54,8 +56,24 @@ let main argv =
                 sseCallback = Some sseCallback
         }
     Server.Start configuration
+
+
+
+
     printfn "Press any key to stop..."
-    Console.ReadLine () |> ignore
+
+    while true do
+        let linie = Console.ReadLine () 
+        async {
+            let text = @"id: 1
+event: Ereignis
+data: Das ist ein Eregnis, ein sähr schönes!
+
+" 
+            do! sendEvent text
+        } |> Async.StartImmediate
+
     Server.Stop ()
+
 
     0 

@@ -39,8 +39,9 @@ module FixedResponses =
             request,
             [ 
                 { key = HeaderKey.StatusOK; value = None }
-                { key = HeaderKey.ContentType; value = Some ("txt/event-stream" :> obj) }
-                { key = HeaderKey.TransferEncoding; value = Some ("chunked" :> obj) }
+                { key = HeaderKey.ContentType; value = Some ("text/event-stream" :> obj) }
+                { key = HeaderKey.Connection; value = Some ("keep-alive" :> obj) }
+                // TODO: Encoding Deflate
             ],
             None
         )

@@ -1,4 +1,5 @@
 namespace WebServer
+open System.Text
 open FileSystem
 open Microsoft.Extensions.Logging
 
@@ -29,6 +30,10 @@ module RequestProcessing =
                 | None -> None
             | None -> None
 
+        let sendSseEvent request (payload: string) =
+            let bytes = Encoding.UTF8.GetBytes payload 
+            request.asyncSendRaw bytes
+
         async {
             request.categoryLogger.log LogLevel.Trace (sprintf "Request: %A %s %s %s%s" socketSession.remoteEndPoint 
                 (string request.header.method) request.header.path 
@@ -47,6 +52,8 @@ module RequestProcessing =
                 match value with
                 | File value -> do! serveFileSystem socketSession request value
                 | Redirection value -> do! FixedResponses.asyncSendMovedPermanently socketSession request value
-            | CheckSse _ -> do! FixedResponses.asyncSendSseAccept socketSession request
+            | CheckSse _ -> 
+                configuration.sseCallback.Value (sendSseEvent request)
+                do! FixedResponses.asyncSendSseAccept socketSession request
             | _ -> do! FixedResponses.asyncSendNotFound socketSession request
         }
