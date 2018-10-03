@@ -42,14 +42,14 @@ module Response =
 
     let tryAddExpires (contentType: string) (request, headers, bytes) = 
         let headers = 
-            if contentType.StartsWith ("application/javascript", StringComparison.CurrentCultureIgnoreCase)
+            if contentType.StartsWith ("application/", StringComparison.CurrentCultureIgnoreCase)
                 || contentType.StartsWith ("text/css", StringComparison.CurrentCultureIgnoreCase)
                 || contentType.StartsWith ("text/html", StringComparison.CurrentCultureIgnoreCase) then
                 (headers |> List.append [{ key = HeaderKey.Expires; value = Some ((DateTime.Now.ToUniversalTime()).ToString "r" :> obj) }])
             else
                 headers
         (request, headers, bytes)
-        
+
         // TODO: AsyncSendStream
         // var bytes = new byte[8192];
         // while (true)
@@ -60,21 +60,12 @@ module Response =
         //     await WriteAsync(bytes, 0, read);
         // }
 
-
-//(asyncSendBytes: ResponseHeaderValue[]->byte[] option->Async<unit>)
-    let asyncSendJson data =
-        let headers = 
-            [| 
-                { key = HeaderKey.StatusOK; value = None }   
-                { key = HeaderKey.ContentType; value = Some ("application/json; charset=UTF-8" :> obj) }  
-                { key = HeaderKey.CacheControl; value = Some ("no-cache,no-store" :> obj) }  
-            |]
+    let getJsonBytes data =
         let jason = DataContractJsonSerializer (data.GetType ())
         use memStm = new MemoryStream ()
         jason.WriteObject (memStm, data)
         memStm.Capacity <- int memStm.Length
-        let bytes = memStm.GetBuffer ()
-        (headers, bytes)
+        memStm.GetBuffer () 
 
     let insertHtml (request, responseHeaders, (html: string option)) =
         match html with
@@ -89,3 +80,18 @@ module Response =
 
     let asyncSendBytes (request, responseHeaders, bytes) =
         request.asyncSendBytes responseHeaders bytes
+
+    let asyncSendJson request data =
+        let contentType = "application/json; charset=UTF-8"
+        let headers = 
+            [ 
+                { key = HeaderKey.StatusOK; value = None }   
+                { key = HeaderKey.ContentType; value = Some (contentType :> obj) }  
+                { key = HeaderKey.CacheControl; value = Some ("no-cache,no-store" :> obj) }  
+            ]
+        
+        let bytes = Some (getJsonBytes data)
+        (request, headers, bytes)
+        |> tryCompress contentType 
+        |> addContentLength
+        |> asyncSendBytes

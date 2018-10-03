@@ -8,21 +8,23 @@ let checkRequest requestHeaders = requestHeaders.path.StartsWith ("/Commander")
 
 [<DataContract>]
 type Affe = {
-    [<field: DataMember>]
+    [<field: DataMember(Name="name")>]
     name: string
-    [<field: DataMember>]
+    [<field: DataMember(Name="email")>]
     email: string
+    [<field: DataMember(Name="nothing", EmitDefaultValue=false)>]
+    nothing: string
 }
 
 let request (request: Request) = 
     let urlQuery = UrlQuery.create request.header.path
     let path = urlQuery.Query "path"
     let isVisble = urlQuery.Query "isVisible"
-    async {()}
-    // request.asyncSendJson ({
-    //     name = "Uwe"
-    //     email = "uriegel@hotmail.de"
-    // } :> obj)
+    Response.asyncSendJson request ({
+         name = "Uwe"
+         email = "uriegel@hotmail.de"
+         nothing = null
+     } :> obj)
 
 [<EntryPoint>]
 let main argv =
