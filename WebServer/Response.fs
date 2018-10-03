@@ -59,15 +59,17 @@ module Response =
             do! request.asyncSendBytes headers bytes
         }
 
-    let asyncSendJson (asyncSendBytes: ResponseHeaderValue[]->byte[] option->Async<unit>) data =
+//(asyncSendBytes: ResponseHeaderValue[]->byte[] option->Async<unit>)
+    let asyncSendJson data =
         let headers = 
-            [|  
-               { key = HeaderKey.ContentType; value = Some ("application/json; charset=UTF-8" :> obj) }  
-               { key = HeaderKey.CacheControl; value = Some ("no-cache,no-store" :> obj) }  
+            [| 
+                { key = HeaderKey.StatusOK; value = None }   
+                { key = HeaderKey.ContentType; value = Some ("application/json; charset=UTF-8" :> obj) }  
+                { key = HeaderKey.CacheControl; value = Some ("no-cache,no-store" :> obj) }  
             |]
         let jason = DataContractJsonSerializer (data.GetType ())
         use memStm = new MemoryStream ()
         jason.WriteObject (memStm, data)
         memStm.Capacity <- int memStm.Length
         let bytes = memStm.GetBuffer ()
-        asyncSendBytes headers (Some bytes)
+        (headers, bytes)

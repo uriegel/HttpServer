@@ -18,11 +18,11 @@ let request (request: Request) =
     let urlQuery = UrlQuery.create request.header.path
     let path = urlQuery.Query "path"
     let isVisble = urlQuery.Query "isVisible"
-
-    request.asyncSendJson ({
-        name = "Uwe"
-        email = "uriegel@hotmail.de"
-    } :> obj)
+    async {()}
+    // request.asyncSendJson ({
+    //     name = "Uwe"
+    //     email = "uriegel@hotmail.de"
+    // } :> obj)
 
 [<EntryPoint>]
 let main argv =

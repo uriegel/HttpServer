@@ -108,7 +108,6 @@ module Request11Session =
                     categoryLogger = logger
                     header = headers
                     asyncSendBytes = asyncSendBytes
-                    asyncSendJson = Response.asyncSendJson asyncSendBytes
                 }
 
                 do! RequestProcessing.asyncProcess socketSession request
