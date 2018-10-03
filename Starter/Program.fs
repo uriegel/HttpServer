@@ -3,6 +3,7 @@ open System.IO
 open System.Runtime.Serialization
 open System.Security.Cryptography.X509Certificates
 open WebServer
+open System.Timers
 
 let checkRequest requestHeaders = requestHeaders.path.StartsWith ("/Commander")
 
@@ -33,6 +34,20 @@ let request (request: Request) =
 
 [<EntryPoint>]
 let main argv =
+
+    let timer = new Timer (6000.0)
+    timer.Elapsed.Add (fun _ -> 
+        async {
+            let text = @"id: 1
+event: Ereignis
+data: Das ist ein Eregnis, ein sähr schönes!
+
+" 
+            do! sendEvent text
+        } |> Async.StartImmediate
+        |> ignore )
+    timer.Start ()
+
     let certificateFile = Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.UserProfile), "certificate.pfx")
     let beits = Array.zeroCreate (int (FileInfo certificateFile).Length)
     use file = File.OpenRead certificateFile
@@ -57,22 +72,8 @@ let main argv =
         }
     Server.Start configuration
 
-
-
-
     printfn "Press any key to stop..."
-
-    while true do
-        let linie = Console.ReadLine () 
-        async {
-            let text = @"id: 1
-event: Ereignis
-data: Das ist ein Eregnis, ein sähr schönes!
-
-" 
-            do! sendEvent text
-        } |> Async.StartImmediate
-
+    Console.ReadLine () |> ignore
     Server.Stop ()
 
 
