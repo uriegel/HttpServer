@@ -40,8 +40,6 @@ module FixedResponses =
             [ 
                 { key = HeaderKey.StatusOK; value = None }
                 { key = HeaderKey.ContentType; value = Some ("text/event-stream" :> obj) }
-                // { key = HeaderKey.Connection; value = Some ("keep-alive" :> obj) }
-                // TODO: Encoding Deflate   
             ],
             None
         )

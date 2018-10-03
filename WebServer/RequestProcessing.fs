@@ -1,7 +1,9 @@
 namespace WebServer
 open System.Text
-open FileSystem
+open System.IO
+open System.IO.Compression
 open Microsoft.Extensions.Logging
+open FileSystem
 
 module RequestProcessing =
     let configuration = Configuration.current.Force ()

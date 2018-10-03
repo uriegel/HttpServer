@@ -75,7 +75,6 @@ module Request11Session =
                                 | HeaderKey.ContentEncoding -> "Content-Encoding"
                                 | HeaderKey.Expires -> "Expires"
                                 | HeaderKey.LastModified -> "Last-Modified"
-                                | HeaderKey.Connection -> "Connection"
                                 | _ -> responseHeaderValue.key.ToString ()
                             let value = 
                                 match responseHeaderValue.value with
