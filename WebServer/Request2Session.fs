@@ -55,12 +55,11 @@ module RequestSession =
                 do! networkStream.AsyncWrite (bytes, 0, bytes.Length)
             }
 
-        let asyncSendBytes headerAccess streamId (responseHeaders: ResponseHeaderValue[]) (payload: byte[] option) = 
+        let asyncSendBytes headerAccess streamId (responseHeaders: ResponseHeaderValue list) (payload: byte[] option) = 
             async {
                 // TODO: Status has to be an extra enum value | int value
                 let responseHeaders = 
                     ResponseHeader.prepare headerAccess responseHeaders
-                    |> Array.toList
                 let status = 
                     responseHeaders
                     |> List.tryFind (fun n -> n.key = HeaderKey.StatusOK || n.key = HeaderKey.Status301 || n.key = HeaderKey.Status304 || n.key = HeaderKey.Status404) 

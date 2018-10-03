@@ -19,7 +19,7 @@ module Request11Session =
         let (|IsStatus|_|) value responseHeaders = 
             let found = 
                 responseHeaders 
-                |> Array.tryFind  (fun n -> n.key = value)
+                |> List.tryFind  (fun n -> n.key = value)
 
             if found.IsSome then 
                 Some true
@@ -59,7 +59,7 @@ module Request11Session =
                     async {
                         let responseHeaders = ResponseHeader.prepare headers responseHeaders
 
-                        let headersToSerialize = responseHeaders |> Array.filter (fun n -> n.key <> HeaderKey.StatusOK
+                        let headersToSerialize = responseHeaders |> List.filter (fun n -> n.key <> HeaderKey.StatusOK
                                                                                         && n.key <> HeaderKey.Status304
                                                                                         && n.key <> HeaderKey.Status404
                                                                                         && n.key <> HeaderKey.Status301)
@@ -94,7 +94,7 @@ module Request11Session =
                                 | IsStatus HeaderKey.Status301 _ -> "301 Moved Permanently"
                                 | _ -> failwith "No status"
 
-                        let headerStrings = headersToSerialize |> Array.map createHeaderStringValue
+                        let headerStrings = headersToSerialize |> List.map createHeaderStringValue
                         let headerString = Header.getHttpVersionAsString headers.httpVersion + " " + (createStatus ()) + "\r\n" 
                                             + System.String.Join ("\r\n", headerStrings) + "\r\n\r\n" 
                         let headerBytes = Encoding.UTF8.GetBytes headerString

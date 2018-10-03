@@ -4,7 +4,7 @@ open System.Collections.Generic
 
 module ResponseHeader =
     let configuration = Configuration.current.Force ()
-    let prepare requestHeaders (responseheaders: ResponseHeaderValue[]) =
+    let prepare requestHeaders (responseheaders: ResponseHeaderValue list) =
         let headerList = new List<ResponseHeaderValue>()
         headerList.Add { key = HeaderKey.Date; value = Some (DateTime.Now.ToUniversalTime () :> obj) }
         headerList.Add { key = HeaderKey.Server; value = Some ("URiegel" :> obj) }
@@ -37,7 +37,8 @@ module ResponseHeader =
         // //         headers["Access-Control-Allow-Method"] = request;
         // // }
         headerList.ToArray ()
-        |> Array.append responseheaders
+        |> Array.toList 
+        |> List.append responseheaders
 
 
 

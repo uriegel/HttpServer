@@ -69,14 +69,28 @@ module FileSystem =
         let asyncSendStream (stream: Stream) (contentType: string) lastModified = 
             async {
                 let! bytes = stream.AsyncRead <| int stream.Length
-                let (bytes, headers) = tryCompress request contentType bytes
-                let contentLengthValue = { key = HeaderKey.ContentLength; value = Some (bytes.Length :> obj) }
+                let headers = 
+                    [  
+                        { key = HeaderKey.StatusOK; value = None }  
+                        { key = HeaderKey.ContentType; value = Some (contentType :> obj) }  
+                    ] 
                 let headers = 
                     match lastModified with
-                    | Some value -> headers |> Array.append [|contentLengthValue; { key = HeaderKey.LastModified; value = Some (value :> obj) }|]
-                    | None -> headers |> Array.append [|contentLengthValue|]
-
-                do! Response.asyncSend request contentType bytes headers
+                    | Some value -> { key = HeaderKey.LastModified; value = Some (value :> obj) } :: headers 
+                    | None -> headers
+                
+                let awaiter = 
+                    (request, headers, Some bytes)
+                    |> tryCompress contentType 
+                    |> addContentLength 
+                    |> tryAddExpires contentType
+                    |> Response.asyncSendBytes
+                do! awaiter
+                // TODO: HEAD
+                // let bytes = 
+                //     match request.header.method with
+                //     | Method.Head -> None
+                //     | _ -> Some bytes
             }
 
         let asyncSendFile () =
@@ -107,9 +121,10 @@ module FileSystem =
                         use stream = File.OpenRead fileType.Path
                         do! asyncSendStream stream contentType lastModified
                     with 
-                    | e -> request.categoryLogger.log LogLevel.Warning <| sprintf "Could not send file: %A" e
-            } 
+                    | e -> request.categoryLogger.log LogLevel.Warning <| sprintf "Could not send file: %A" e 
+            }
         async {
             // TODO: SendRange
             do! asyncSendFile ()
         }
+        
