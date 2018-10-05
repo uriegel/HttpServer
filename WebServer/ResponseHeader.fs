@@ -4,12 +4,16 @@ open System.Collections.Generic
 
 module ResponseHeader =
     let configuration = Configuration.current.Force ()
-    let prepare requestHeaders (responseheaders: ResponseHeaderValue list) =
-        let headerList = new List<ResponseHeaderValue>()
-        headerList.Add { key = HeaderKey.Date; value = Some (DateTime.Now.ToUniversalTime () :> obj) }
-        headerList.Add { key = HeaderKey.Server; value = Some ("URiegel" :> obj) }
-        if configuration.xFrameOptions <> XFrameOptions.NotSet then
-            headerList.Add { key = HeaderKey.XFrameOptions; value = Some (configuration.xFrameOptions.ToString () :> obj) }
+    let prepare requestHeaders responseheaders =
+        let headers = [
+            { key = HeaderKey.Date; value = Some (DateTime.Now.ToUniversalTime () :> obj) }
+            { key = HeaderKey.Server; value = Some ("URiegel" :> obj) }
+        ] 
+        let headers = 
+            match configuration.xFrameOptions with 
+            | XFrameOptions.NotSet -> headers
+            | _ -> { key = HeaderKey.XFrameOptions; value = Some (configuration.xFrameOptions.ToString () :> obj) } :: headers
+        
         // if (server.Configuration.AllowOrigins != null)
         // {
         //     var origin = requestHeaders["origin"];
@@ -36,9 +40,8 @@ module ResponseHeader =
         // //     if (request != null)
         // //         headers["Access-Control-Allow-Method"] = request;
         // // }
-        headerList.ToArray ()
-        |> Array.toList 
-        |> List.append responseheaders
+        responseheaders
+        |> List.append headers 
 
 
 

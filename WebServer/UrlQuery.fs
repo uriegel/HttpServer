@@ -23,10 +23,11 @@ module UrlQuery =
             let pos = methodPath.LastIndexOf '/' + 1 
             {
                 method = methodPath.Substring pos
-                rawParameters = matches 
-                                |> Seq.cast 
-                                |> Seq.map (fun (s: Match) -> (s.Groups.["key"].Value, Uri.UnescapeDataString (unescapeSpaces s.Groups.["value"].Value))) 
-                                |> Map.ofSeq
+                rawParameters = 
+                    matches 
+                    |> Seq.cast 
+                    |> Seq.map (fun (s: Match) -> (s.Groups.["key"].Value, Uri.UnescapeDataString (unescapeSpaces s.Groups.["value"].Value))) 
+                    |> Map.ofSeq
             }
         else 
             let pos = url.LastIndexOf '/' + 1 

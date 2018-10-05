@@ -10,15 +10,15 @@ module RequestProcessing =
 
     let asyncProcess socketSession request =
 
-        let (|IsTlsRedirect|_|) request = 
+        let (|IsTlsRedirect|_|) _ = 
             match socketSession.isSecure with
             | true -> None
-            | false when configuration.isTlsEnabled -> Some true
+            | false when configuration.isTlsEnabled -> Some ()
             | false -> None
 
         let (|CheckExtension|_|) request = 
             match configuration.checkRequest request.header with
-            | true -> Some true
+            | true -> Some ()
             | false -> None
 
         let (|CheckSse|_|) request = 
@@ -27,7 +27,7 @@ module RequestProcessing =
                 match request.header.getValue HeaderKey.Accept with
                 | Some acceptValue -> 
                     match acceptValue with
-                    | "text/event-stream" -> Some true 
+                    | "text/event-stream" -> Some () 
                     | _ -> None
                 | None -> None
             | None -> None
@@ -44,17 +44,17 @@ module RequestProcessing =
             
             match request with
             // TODO: TLS-Redirect als Option, aber ACME für Certbot priorisieren
-            | IsTlsRedirect value -> 
+            | IsTlsRedirect -> 
                 do! FixedResponses.asyncSendMovedPermanently socketSession request 
                         ("https://" + configuration.domainName + 
                         (if configuration.tlsPort = 443 then "" else sprintf ":%d" configuration.tlsPort) + 
                         request.header.path)
-            | CheckExtension _ -> do! configuration.request request
+            | CheckExtension -> do! configuration.request request
             | IsFileSystem value -> 
                 match value with
                 | File value -> do! serveFileSystem socketSession request value
                 | Redirection value -> do! FixedResponses.asyncSendMovedPermanently socketSession request value
-            | CheckSse _ -> 
+            | CheckSse -> 
                 configuration.sseCallback.Value (sendSseEvent request)
                 do! FixedResponses.asyncSendSseAccept socketSession request
             | _ -> do! FixedResponses.asyncSendNotFound socketSession request

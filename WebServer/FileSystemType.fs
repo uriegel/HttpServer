@@ -1,8 +1,8 @@
 namespace WebServer
 
 type FileType = {
-    Path: string
-    Query: string option 
+    path: string
+    query: string option 
 }
 
 type FileSystemType = 

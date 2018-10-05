@@ -35,6 +35,8 @@ let request (request: Request) =
 [<EntryPoint>]
 let main argv =
 
+    printfn "%A" argv
+
     let timer = new Timer (6000.0)
     timer.Elapsed.Add (fun _ -> 
         async {
@@ -70,11 +72,11 @@ data: Das ist ein Eregnis, ein sähr schönes!
                 request = request
                 sseCallback = Some sseCallback
         }
-    Server.Start configuration
+    Server.start configuration
 
     printfn "Press any key to stop..."
     Console.ReadLine () |> ignore
-    Server.Stop ()
+    Server.stop ()
 
 
     0 

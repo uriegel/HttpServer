@@ -16,35 +16,6 @@ type TlsProtocol =
     | Tls11 = 1
     | Tls12 = 2
 
-type InitializationData() =
-    member val LocalAddress = IPAddress.Any with get, set    
-    member val Webroot = Directory.GetCurrentDirectory() with get, set 
-    member val SocketTimeout = 20000 with get, set 
-    member val Extensions = List<int>() with get
-    member val DomainName = "" with get, set 
-    //member val AllowOrigins = .Array<string>[0] { get; set; }
-    member val Port = 80 with get, set 
-    member val TlsPort = 443 with get, set 
-    member val IsTlsEnabled = false with get, set 
-    member val TlsRedirect = false with get, set 
-    member val Http2 = false with get, set 
-    member val Certificate: X509Certificate2 = null with get, set 
-    member val LowestProtocol = TlsProtocol.Tls10 with get, set 
-    member val CheckRevocation = false with get, set 
-
-    //member val  public string[] AppCaches { get; set; }
-
-    member val CertificateName = null with get, set 
-    member val HstsDurationInSeconds = 0 with get, set 
-    member val XFrameOptions = XFrameOptions.NotSet with get, set 
-
-    member internal this.TlsProtocols
-        with get() =
-            match this.LowestProtocol with
-            | TlsProtocol.Tls11 -> SslProtocols.Tls11 ||| SslProtocols.Tls12
-            | TlsProtocol.Tls12 -> SslProtocols.Tls12
-            | _ -> SslProtocols.Tls ||| SslProtocols.Tls11 ||| SslProtocols.Tls12
-
 module Server =
 
     let private log = Logger.log "Server"
@@ -91,8 +62,8 @@ module Server =
 
     let createListener port = 
         let listener = Ipv6TcpListenerFactory.create port
-        if not listener.Ipv6 then log LogLevel.Information "IPv6 or IPv6 dual mode not supported, switching to IPv4"
-        listener.Listener
+        if not listener.ipv6 then log LogLevel.Information "IPv6 or IPv6 dual mode not supported, switching to IPv4"
+        listener.listener
 
     let getCertificate name = 
         use store = new X509Store (StoreLocation.LocalMachine)
@@ -102,7 +73,7 @@ module Server =
         |> Seq.filter (fun n -> n.FriendlyName = name)
         |> Seq.tryItem 0
 
-    let Start configuration = 
+    let start configuration = 
         if not isStarted then
             try
                 Configuration.setConfiguration configuration
@@ -158,7 +129,7 @@ module Server =
             | e ->
                 log LogLevel.Warning (sprintf "Could not start HTTP Listener: %A" e)
                 isStarted <- false
-    let Stop () =
+    let stop () =
         if isStarted then
             try
                 log LogLevel.Information "Terminating managed extensions..."

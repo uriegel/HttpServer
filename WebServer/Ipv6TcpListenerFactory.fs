@@ -5,8 +5,8 @@ open System.Net.Sockets
 module Ipv6TcpListenerFactory =
 
     type Ipv6Listener = {
-        Listener: TcpListener 
-        Ipv6: bool
+        listener: TcpListener 
+        ipv6: bool
     }
 
     let private setDualMode (socket: Socket) =
@@ -15,17 +15,17 @@ module Ipv6TcpListenerFactory =
     let create port = 
         try
             let result = {
-                Listener = TcpListener (IPAddress.IPv6Any, port)
-                Ipv6 = true
+                listener = TcpListener (IPAddress.IPv6Any, port)
+                ipv6 = true
             }
-            setDualMode result.Listener.Server
+            setDualMode result.listener.Server
             result
         with 
         | :? SocketException as se when se.SocketErrorCode <> SocketError.AddressFamilyNotSupported ->
             raise se
         | :? SocketException ->
             let result = {
-                Listener = TcpListener (IPAddress.Any, port)
-                Ipv6 = false
+                listener = TcpListener (IPAddress.Any, port)
+                ipv6 = false
             }
             result

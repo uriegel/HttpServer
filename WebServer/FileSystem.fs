@@ -48,17 +48,17 @@ module FileSystem =
             | _ when relativePath.Length = 0 -> 
                 let path = Path.Combine (webroot, "index.html")
                 if File.Exists path then
-                    Some <| FileSystemType.File { Path = path; Query = query }
+                    Some <| FileSystemType.File { path = path; query = query }
                 else
                     None
-            | _ when File.Exists localFile -> Some <| FileSystemType.File { Path = localFile; Query = query} 
+            | _ when File.Exists localFile -> Some <| FileSystemType.File { path = localFile; query = query} 
             | _ when Directory.Exists localFile ->
                 if not (url.EndsWith "/") then
                     Some <| Redirection (url + "/" + match query with | Some value -> "?" + value | None -> "")
                 else
                     let localFile = Path.Combine (localFile, "index.html")
                     if File.Exists localFile then
-                        Some <| FileSystemType.File { Path = localFile; Query = query} 
+                        Some <| FileSystemType.File { path = localFile; query = query} 
                     else
                         None
             | _ -> None
@@ -95,12 +95,12 @@ module FileSystem =
 
         let asyncSendFile () =
             async {
-                let info = FileInfo fileType.Path
+                let info = FileInfo fileType.path
                 let notModified = 
                     match request.header.ifModifiedSince with
                     | Some value ->
                         let fileTime = info.LastWriteTime.AddTicks -(info.LastWriteTime.Ticks % (TimeSpan.FromSeconds 1.0).Ticks)
-                        let diff = fileTime - request.header.ifModifiedSince.Value
+                        let diff = fileTime - value
                         diff <= TimeSpan.FromMilliseconds 0.0 
                     | None -> false
 
@@ -118,7 +118,7 @@ module FileSystem =
 
                     let lastModified = Some <| info.LastWriteTime.ToUniversalTime ()
                     try
-                        use stream = File.OpenRead fileType.Path
+                        use stream = File.OpenRead fileType.path
                         do! asyncSendStream stream contentType lastModified
                     with 
                     | e -> request.categoryLogger.log LogLevel.Warning <| sprintf "Could not send file: %A" e 

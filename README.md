@@ -18,12 +18,17 @@ build for linux 32bit:
 
 ```dotnet publish -c Release -r linux-arm```
 
+### Run for Windows
+build for linux 32bit:
+
+```dotnet publish -c Release -r win-x64```
+
 access raspis folder:
 
 ```
 mkdir pi
 sshfs pi@raspberrypi: pi
-```
+```cd 
 
 on Raspberry:
 ```
