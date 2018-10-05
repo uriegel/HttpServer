@@ -35,8 +35,6 @@ let request (request: Request) =
 [<EntryPoint>]
 let main argv =
 
-    printfn "%A" argv
-
     let timer = new Timer (6000.0)
     timer.Elapsed.Add (fun _ -> 
         async {
@@ -55,19 +53,19 @@ data: Das ist ein Eregnis, ein sähr schönes!
     use file = File.OpenRead certificateFile
     file.Read (beits, 0, beits.Length) |> ignore
     let certificate = Some (new X509Certificate2 (beits, "uwe"))
-    //let certificate = Server.getCertificate "CAESAR"
+    // let certificate = Server.getCertificate "CAESAR"
 
     Logger.lowTraceEnabled <- true
     let configuration = { 
             Configuration.defaultConfiguration with 
                 webroot = "../webroot"
-                //IsTlsEnabled = true
+                isTlsEnabled = true
                 tlsRedirect = true
                 //TlsPort = 4433
                 //Http2 = true
                 certificate = certificate
-                //DomainName = "uriegel.de"
-                domainName = "cas-ws121013.caseris.intern"                
+                domainName = "uriegel.de"
+                //domainName = "cas-ws121013.caseris.intern"                
                 checkRequest = checkRequest
                 request = request
                 sseCallback = Some sseCallback
