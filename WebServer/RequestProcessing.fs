@@ -22,19 +22,15 @@ module RequestProcessing =
             | false -> None
 
         let (|CheckSse|_|) request = 
-            match configuration.sseCallback  with
+            match configuration.serverSentEvent with
             | Some value -> 
                 match request.header.getValue HeaderKey.Accept with
                 | Some acceptValue -> 
                     match acceptValue with
-                    | "text/event-stream" -> Some () 
+                    | "text/event-stream" -> Some value
                     | _ -> None
                 | None -> None
             | None -> None
-
-        let sendSseEvent request (payload: string) =
-            let bytes = Encoding.UTF8.GetBytes payload 
-            request.asyncSendRaw bytes
 
         async {
             request.categoryLogger.log LogLevel.Trace (sprintf "Request: %A %s %s %s%s" socketSession.remoteEndPoint 
@@ -54,8 +50,8 @@ module RequestProcessing =
                 match value with
                 | File value -> do! serveFileSystem socketSession request value
                 | Redirection value -> do! FixedResponses.asyncSendMovedPermanently socketSession request value
-            | CheckSse -> 
-                configuration.sseCallback.Value (sendSseEvent request)
+            | CheckSse value -> 
+                value request |> ignore
                 do! FixedResponses.asyncSendSseAccept socketSession request
             | _ -> do! FixedResponses.asyncSendNotFound socketSession request
         }

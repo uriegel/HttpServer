@@ -129,6 +129,7 @@ module RequestSession =
                     let headerAccess = createHeaderAccess headerFields
 
                     do! RequestProcessing.asyncProcess socketSession {
+                        socketSessionId = socketSession.id
                         categoryLogger = logger
                         header = headerAccess
                         asyncSendBytes = asyncSendBytes headerAccess headers.StreamId

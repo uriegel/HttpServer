@@ -95,3 +95,8 @@ module Response =
         |> tryCompress contentType 
         |> addContentLength
         |> asyncSendBytes
+
+    let sendSseEvent request event payload =
+        let ssePayload = sprintf "event: %s\r\ndata: %s\r\n\r\n" event payload
+        let bytes = Encoding.UTF8.GetBytes ssePayload
+        request.asyncSendRaw bytes

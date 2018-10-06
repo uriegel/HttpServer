@@ -4,7 +4,6 @@ open System.Runtime.Serialization
 open System.Security.Cryptography.X509Certificates
 open WebServer
 open System.Timers
-
 let checkRequest requestHeaders = requestHeaders.path.StartsWith ("/Commander")
 
 [<DataContract>]
@@ -17,10 +16,10 @@ type Affe = {
     nothing: string
 }
 
-let mutable sendEvent = fun b -> async{()}
+let mutable serverSentEvent: Request option = None
 
-let sseCallback sendEventArg =
-    sendEvent <- sendEventArg
+let sseInit request =
+    serverSentEvent <- Some request
 
 let request (request: Request) = 
     let urlQuery = UrlQuery.create request.header.path
@@ -37,14 +36,12 @@ let main argv =
 
     let timer = new Timer (6000.0)
     timer.Elapsed.Add (fun _ -> 
-        async {
-            let text = @"id: 1
-event: Ereignis
-data: Das ist ein Eregnis, ein sähr schönes!
-
-" 
-            do! sendEvent text
-        } |> Async.StartImmediate
+        match serverSentEvent with
+        | Some sse ->
+            async {
+                do! Response.sendSseEvent sse "Event" "Das ist ein Ereignis, ein sähr schönes!"
+            } |> Async.StartImmediate
+        |None -> ()
         |> ignore )
     timer.Start ()
 
@@ -61,14 +58,14 @@ data: Das ist ein Eregnis, ein sähr schönes!
                 webroot = "../webroot"
                 isTlsEnabled = true
                 tlsRedirect = true
-                //TlsPort = 4433
+                tlsPort = 4433
                 //Http2 = true
                 certificate = certificate
                 domainName = "uriegel.de"
                 //domainName = "cas-ws121013.caseris.intern"                
                 checkRequest = checkRequest
                 request = request
-                sseCallback = Some sseCallback
+                serverSentEvent = Some sseInit
         }
     Server.start configuration
 
