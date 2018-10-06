@@ -97,6 +97,8 @@ module Response =
         |> asyncSendBytes
 
     let sendSseEvent request event payload =
+        // TODO: MailboxProcessor
+        // TODO: Event, when socket session is closed
         let ssePayload = sprintf "event: %s\r\ndata: %s\r\n\r\n" event payload
         let bytes = Encoding.UTF8.GetBytes ssePayload
         request.asyncSendRaw bytes
