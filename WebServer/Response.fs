@@ -96,9 +96,24 @@ module Response =
         |> addContentLength
         |> asyncSendBytes
 
-    let sendSseEvent request event payload =
-        // TODO: MailboxProcessor
-        // TODO: Event, when socket session is closed
-        let ssePayload = sprintf "event: %s\r\ndata: %s\r\n\r\n" event payload
-        let bytes = Encoding.UTF8.GetBytes ssePayload
-        request.asyncSendRaw bytes
+    let createSseProcessor request = 
+        let enqueuer = MailboxProcessor.Start(fun queue -> 
+            // the message processing function
+            let rec messageLoop() = async {
+                let! ssePayload = queue.Receive()
+                let bytes = Encoding.UTF8.GetBytes (s = ssePayload)
+                do! request.asyncSendRaw bytes
+
+                // loop to top
+                return! messageLoop()  
+            }
+
+            // start the loop   
+            messageLoop() 
+        )
+
+        let result event payload = 
+            let ssePayload = sprintf "event: %s\r\ndata: %s\r\n\r\n" event payload
+            enqueuer.Post ssePayload
+        result
+           

@@ -22,6 +22,7 @@ module Configuration =
         tlsProtocols = SslProtocols.Tls ||| SslProtocols.Tls11 ||| SslProtocols.Tls12
         checkRequest = fun requestHeaders -> false
         request = fun request -> async { () }
+        sessionClosed = None
         serverSentEvent = None
     }
 

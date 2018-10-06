@@ -100,9 +100,6 @@ module Server =
 
                     match configuration.certificate with
                     | Some certificate -> log LogLevel.Information (sprintf "Using certificate %A" certificate)
-                    // TODO
-                    // | None when (configuration.CertificateName <> null)
-                    //      -> failwith (sprintf "No certificate with display name %A found" configuration.CertificateName)
                     | None -> failwith "No certificate specified"
 
                     if configuration.checkRevocation then 

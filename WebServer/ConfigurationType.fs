@@ -27,6 +27,7 @@ type ConfigurationType = {
     tlsProtocols: SslProtocols
     checkRequest: RequestHeaders->bool
     request: Request->Async<unit>
-    serverSentEvent: (Request->unit) option
+    sessionClosed: (int->unit) option
+    serverSentEvent: (SseContext->unit) option
 }
 

@@ -16,10 +16,10 @@ type Affe = {
     nothing: string
 }
 
-let mutable serverSentEvent: Request option = None
+let mutable serverSentEvent: SseContext option = None
 
-let sseInit request =
-    serverSentEvent <- Some request
+let sseInit context =
+    serverSentEvent <- Some context
 
 let request (request: Request) = 
     let urlQuery = UrlQuery.create request.data.header.path
@@ -31,18 +31,19 @@ let request (request: Request) =
          nothing = null
     } 
 
+let onClosed id = 
+    match serverSentEvent with
+    | Some sse when sse.request.socketSessionId = id -> serverSentEvent <- None
+    | _ -> ()
+
 [<EntryPoint>]
 let main argv =
 
     let timer = new Timer (6000.0)
     timer.Elapsed.Add (fun _ -> 
         match serverSentEvent with
-        | Some sse ->
-            async {
-                do! Response.sendSseEvent sse "Event" "Das ist ein Ereignis, ein sähr schönes!"
-            } |> Async.StartImmediate
-        |None -> ()
-        |> ignore )
+        | Some sse -> sse.send "Left" "This is an event"
+        |None -> ())
     timer.Start ()
 
     let certificateFile = Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.UserProfile), "certificate.pfx")
@@ -65,6 +66,7 @@ let main argv =
                 //domainName = "cas-ws121013.caseris.intern"                
                 checkRequest = checkRequest
                 request = request
+                sessionClosed = Some onClosed
                 serverSentEvent = Some sseInit
         }
     Server.start configuration

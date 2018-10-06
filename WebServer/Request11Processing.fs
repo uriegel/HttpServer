@@ -7,8 +7,8 @@ open System.Text
 open System.Diagnostics
 
 module Request11Session =
-    let mutable private idSeed = 0
     let configuration = Configuration.current.Force ()
+    let mutable private idSeed = 0
 
     let private initialize socketSessionId =
         let id = Interlocked.Increment &idSeed
@@ -109,13 +109,14 @@ module Request11Session =
                     networkStream.AsyncWrite (bytes, 0, bytes.Length)
 
                 let request = {
-                    data = {
-                        socketSessionId = socketSession.id
+                    categoryLogger = logger
+                    request = {
                         header = headers
                     }
-                    categoryLogger = logger
-                    asyncSendBytes = asyncSendBytes
-                    asyncSendRaw = asyncSendRaw
+                    response = {
+                        asyncSendBytes = asyncSendBytes
+                        asyncSendRaw = asyncSendRaw
+                    }
                 }
 
                 do! RequestProcessing.asyncProcess socketSession request
@@ -125,7 +126,7 @@ module Request11Session =
             | None -> 
                 logger.lowTrace <| fun () -> "Socket session closed"
                 match configuration.sessionClosed with
-                | Some socketClosed -> socketClosed socketSession.id
+                | Some sessionClosed -> sessionClosed socketSession.id
                 | None -> ()
                 return false
         }

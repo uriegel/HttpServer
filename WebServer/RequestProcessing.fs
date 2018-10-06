@@ -39,7 +39,6 @@ module RequestProcessing =
                 (if socketSession.isSecure then "" else " not secure"))
             
             match request with
-            // TODO: TLS-Redirect als Option, aber ACME für Certbot priorisieren
             | IsTlsRedirect -> 
                 do! FixedResponses.asyncSendMovedPermanently socketSession request 
                         ("https://" + configuration.domainName + 
@@ -51,7 +50,11 @@ module RequestProcessing =
                 | File value -> do! serveFileSystem socketSession request value
                 | Redirection value -> do! FixedResponses.asyncSendMovedPermanently socketSession request value
             | CheckSse value -> 
-                value request |> ignore
+                let context = {
+                    request = request.data
+                    send = Response.createSseProcessor request
+                }
+                value context |> ignore
                 do! FixedResponses.asyncSendSseAccept socketSession request
             | _ -> do! FixedResponses.asyncSendNotFound socketSession request
         }

@@ -11,3 +11,8 @@ type Request = {
     asyncSendBytes: (ResponseHeaderValue list)->byte[] option->Async<unit> 
     asyncSendRaw: byte[]->Async<unit> 
 }
+
+type SseContext = {
+    request: RequestData
+    send: string->string->unit
+}
