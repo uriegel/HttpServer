@@ -17,14 +17,14 @@ module RequestProcessing =
             | false -> None
 
         let (|CheckExtension|_|) request = 
-            match configuration.checkRequest request.header with
+            match configuration.checkRequest request.data.header with
             | true -> Some ()
             | false -> None
 
         let (|CheckSse|_|) request = 
             match configuration.serverSentEvent with
             | Some value -> 
-                match request.header.getValue HeaderKey.Accept with
+                match request.data.header.getValue HeaderKey.Accept with
                 | Some acceptValue -> 
                     match acceptValue with
                     | "text/event-stream" -> Some value
@@ -34,8 +34,8 @@ module RequestProcessing =
 
         async {
             request.categoryLogger.log LogLevel.Trace (sprintf "Request: %A %s %s %s%s" socketSession.remoteEndPoint 
-                (string request.header.method) request.header.path 
-                (Header.getHttpVersionAsString request.header.httpVersion)
+                (string request.data.header.method) request.data.header.path 
+                (Header.getHttpVersionAsString request.data.header.httpVersion)
                 (if socketSession.isSecure then "" else " not secure"))
             
             match request with
@@ -44,7 +44,7 @@ module RequestProcessing =
                 do! FixedResponses.asyncSendMovedPermanently socketSession request 
                         ("https://" + configuration.domainName + 
                         (if configuration.tlsPort = 443 then "" else sprintf ":%d" configuration.tlsPort) + 
-                        request.header.path)
+                        request.data.header.path)
             | CheckExtension -> do! configuration.request request
             | IsFileSystem value -> 
                 match value with

@@ -22,7 +22,7 @@ let sseInit request =
     serverSentEvent <- Some request
 
 let request (request: Request) = 
-    let urlQuery = UrlQuery.create request.header.path
+    let urlQuery = UrlQuery.create request.data.header.path
     let path = urlQuery.Query "path"
     let isVisble = urlQuery.Query "isVisible"
     Response.asyncSendJson request {

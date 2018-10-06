@@ -32,7 +32,7 @@ module Response =
                     Some (ms.GetBuffer ())
                 )
 
-            match request.header.acceptEncoding with
+            match request.data.header.acceptEncoding with
             | ContentEncoding.Deflate when compress -> 
                 compressStream (fun stream -> new DeflateStream (stream, System.IO.Compression.CompressionMode.Compress, true) :> Stream ) "deflate"
             | ContentEncoding.GZip when compress -> 

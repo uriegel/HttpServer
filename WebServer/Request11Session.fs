@@ -108,9 +108,11 @@ module Request11Session =
                     networkStream.AsyncWrite (bytes, 0, bytes.Length)
 
                 let request = {
-                    socketSessionId = socketSession.id
+                    data = {
+                        socketSessionId = socketSession.id
+                        header = headers
+                    }
                     categoryLogger = logger
-                    header = headers
                     asyncSendBytes = asyncSendBytes
                     asyncSendRaw = asyncSendRaw
                 }

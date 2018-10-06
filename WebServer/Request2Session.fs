@@ -129,9 +129,11 @@ module RequestSession =
                     let headerAccess = createHeaderAccess headerFields
 
                     do! RequestProcessing.asyncProcess socketSession {
-                        socketSessionId = socketSession.id
+                        data = {
+                            socketSessionId = socketSession.id
+                            header = headerAccess
+                        }
                         categoryLogger = logger
-                        header = headerAccess
                         asyncSendBytes = asyncSendBytes headerAccess headers.StreamId
                         asyncSendRaw = fun b -> async{()}
                     }                    

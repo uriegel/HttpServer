@@ -11,7 +11,7 @@ module FileSystem =
     let configuration = Configuration.current.Force ()
     let webroot = (FileInfo configuration.webroot).FullName
     let (|IsFileSystem|_|) request = 
-        let url = Uri.UnescapeDataString request.header.path
+        let url = Uri.UnescapeDataString request.data.header.path
         let (url, query) = 
             match url with
             | SplitChar '?' (path, query) -> (path, Some query)
@@ -97,7 +97,7 @@ module FileSystem =
             async {
                 let info = FileInfo fileType.path
                 let notModified = 
-                    match request.header.ifModifiedSince with
+                    match request.data.header.ifModifiedSince with
                     | Some value ->
                         let fileTime = info.LastWriteTime.AddTicks -(info.LastWriteTime.Ticks % (TimeSpan.FromSeconds 1.0).Ticks)
                         let diff = fileTime - value
