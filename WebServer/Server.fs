@@ -1,15 +1,11 @@
 ﻿namespace WebServer
-
-open System.Collections.Generic
-open System.IO
+open System
+open System.Diagnostics
 open System.Net
 open System.Security.Cryptography.X509Certificates
-open System.Security.Authentication
 open System.Threading
 open System.Net.Sockets
-open System
 open Microsoft.Extensions.Logging
-open System.Diagnostics
 
 type TlsProtocol =
     Tls10 = 0

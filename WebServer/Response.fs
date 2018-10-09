@@ -6,6 +6,8 @@ open System.Runtime.Serialization.Json
 open System.Text
 
 module Response =
+    let configuration = Configuration.current.Force ()
+
     let addContentLength (request, headers, (bytes: byte[] option)) = 
         match bytes with
         | Some bytes ->
@@ -17,9 +19,10 @@ module Response =
         match bytes with
         | Some bytes -> 
             let compress =  
-                contentType.StartsWith ("application/javascript", StringComparison.CurrentCultureIgnoreCase)
-                || contentType.StartsWith ("text/", StringComparison.CurrentCultureIgnoreCase)
-                || contentType.StartsWith ("application/json", StringComparison.CurrentCultureIgnoreCase)
+                not configuration.noCompression 
+                && (contentType.StartsWith ("application/javascript", StringComparison.CurrentCultureIgnoreCase)
+                    || contentType.StartsWith ("text/", StringComparison.CurrentCultureIgnoreCase)
+                    || contentType.StartsWith ("application/json", StringComparison.CurrentCultureIgnoreCase))
             
             let compressStream (streamCompressor: Stream->Stream) compressionMethod =
                 use ms = new MemoryStream ()

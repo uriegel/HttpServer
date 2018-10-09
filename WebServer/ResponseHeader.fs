@@ -1,6 +1,5 @@
 namespace WebServer
 open System
-open System.Collections.Generic
 
 module ResponseHeader =
     let configuration = Configuration.current.Force ()

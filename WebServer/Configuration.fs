@@ -8,6 +8,7 @@ module Configuration =
         webroot = ""
         socketTimeout = 20000
         domainName = (Dns.GetHostEntry (System.Environment.MachineName)).HostName
+        noCompression = false
         //member val AllowOrigins = .Array<string>[0] { get; set; }
         port = 80
         tlsPort = 443

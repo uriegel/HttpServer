@@ -14,6 +14,7 @@ type ConfigurationType = {
     webroot: string
     socketTimeout: int
     domainName: string
+    noCompression: bool
     //member val AllowOrigins = .Array<string>[0] { get; set; }
     port: int
     tlsPort: int
