@@ -81,7 +81,7 @@ module Response =
     let asyncSendBytes (request, responseHeaders, bytes) =
         request.asyncSendBytes responseHeaders bytes
 
-    let asyncSendJson request data =
+    let asyncSendJsonBytes request jsonBytes =
         let contentType = "application/json; charset=UTF-8"
         let headers = 
             [ 
@@ -90,11 +90,18 @@ module Response =
                 { key = HeaderKey.CacheControl; value = Some ("no-cache,no-store" :> obj) }  
             ]
         
-        let bytes = Some (getJsonBytes data)
-        (request, headers, bytes)
+        (request, headers, jsonBytes)
         |> tryCompress contentType 
         |> addContentLength
         |> asyncSendBytes
+
+    let asyncSendJson request data =
+        let jsonBytes = Some (getJsonBytes data)
+        asyncSendJsonBytes request jsonBytes
+
+    let asyncSendJsonString request (json: string) =
+        let jsonBytes = Some (Encoding.UTF8.GetBytes json)
+        asyncSendJsonBytes request jsonBytes
 
     let createSseProcessor request = 
         let enqueuer = MailboxProcessor.Start(fun queue -> 
