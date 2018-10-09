@@ -19,6 +19,7 @@ module Response =
             let compress =  
                 contentType.StartsWith ("application/javascript", StringComparison.CurrentCultureIgnoreCase)
                 || contentType.StartsWith ("text/", StringComparison.CurrentCultureIgnoreCase)
+                || contentType.StartsWith ("application/json", StringComparison.CurrentCultureIgnoreCase)
             
             let compressStream (streamCompressor: Stream->Stream) compressionMethod =
                 use ms = new MemoryStream ()
