@@ -46,7 +46,7 @@ let main argv =
         |None -> ())
     timer.Start ()
 
-    let certificateFile = Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.UserProfile), "certificate.pfx")
+    let certificateFile = Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.MyDocuments), "certificate.pfx")
     let beits = Array.zeroCreate (int (FileInfo certificateFile).Length)
     use file = File.OpenRead certificateFile
     file.Read (beits, 0, beits.Length) |> ignore
