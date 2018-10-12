@@ -9,6 +9,7 @@ open FixedResponses
 
 module FileSystem =
     let configuration = Configuration.current.Force ()
+    let pathSeparator = Path.DirectorySeparatorChar
     let webroot = (FileInfo configuration.webroot).FullName
     let (|IsFileSystem|_|) request = 
         let url = Uri.UnescapeDataString request.data.header.path
@@ -17,9 +18,12 @@ module FileSystem =
             | SplitChar '?' (path, query) -> (path, Some query)
             | _ -> (url, None)
                             
-        let path = url.Replace ('/', '\\')
+        let path = 
+            match pathSeparator with
+            | '/' -> url
+            | _ -> url.Replace ('/', pathSeparator)
         let relativePath = 
-            if path.StartsWith @"\" then
+            if path.StartsWith pathSeparator then
                 path.Substring 1
             else
                 path

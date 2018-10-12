@@ -82,6 +82,8 @@ module Server =
                 log LogLevel.Information (sprintf "Socket timeout: %ds" (configuration.socketTimeout / 1000))
                 log LogLevel.Information (sprintf "Domain name: %s" configuration.domainName)
 
+                log LogLevel.Information (sprintf "Web root: %s" configuration.webroot) 
+
                 if configuration.localAddress <> IPAddress.Any then
                     log LogLevel.Information (sprintf "Binding to local address: %s" (configuration.localAddress.ToString ()))
         
