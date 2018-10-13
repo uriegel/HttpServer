@@ -99,6 +99,18 @@ module Response =
         |> addContentLength
         |> asyncSendBytes
 
+    let asyncSendFile request contentType bytes =
+        let headers = 
+            [ 
+                { key = HeaderKey.StatusOK; value = None }   
+                { key = HeaderKey.ContentType; value = Some (contentType :> obj) }  
+                { key = HeaderKey.CacheControl; value = Some ("no-cache,no-store" :> obj) }  
+            ]
+        (request, headers, bytes)
+        |> tryCompress contentType 
+        |> addContentLength
+        |> asyncSendBytes
+
     let asyncSendJson request data =
         let jsonBytes = Some (getJsonBytes data)
         asyncSendJsonBytes request jsonBytes
