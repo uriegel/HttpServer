@@ -99,7 +99,7 @@ module Response =
         |> addContentLength
         |> asyncSendBytes
 
-    let asyncSendFile request contentType bytes =
+    let asyncSendFileBytes request contentType bytes =
         let headers = 
             [ 
                 { key = HeaderKey.StatusOK; value = None }   
