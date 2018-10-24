@@ -104,7 +104,7 @@ module Response =
             [ 
                 { key = HeaderKey.StatusOK; value = None }   
                 { key = HeaderKey.ContentType; value = Some (contentType :> obj) }  
-                { key = HeaderKey.CacheControl; value = Some ("no-cache,no-store" :> obj) }  
+                //{ key = HeaderKey.CacheControl; value = Some ("no-cache,no-store" :> obj) }  
             ]
         (request, headers, bytes)
         |> tryCompress contentType 
