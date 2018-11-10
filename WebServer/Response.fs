@@ -99,12 +99,12 @@ module Response =
         |> addContentLength
         |> asyncSendBytes
 
-    let asyncSendFileBytes request contentType bytes =
+    let asyncSendFileBytes request contentType (lastModified: DateTime) bytes =
         let headers = 
             [ 
                 { key = HeaderKey.StatusOK; value = None }   
                 { key = HeaderKey.ContentType; value = Some (contentType :> obj) }  
-                { key = HeaderKey.CacheControl; value = Some ("no-cache,no-store" :> obj) }  
+                { key = HeaderKey.LastModified; value = Some (lastModified :> obj) }  
             ]
         (request, headers, bytes)
         |> tryCompress contentType 
