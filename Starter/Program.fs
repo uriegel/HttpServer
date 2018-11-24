@@ -25,12 +25,11 @@ let request (request: Request) =
     let urlQuery = UrlQuery.create request.data.header.path
     let path = urlQuery.Query "path"
     let isVisble = urlQuery.Query "isVisible"
-    FixedResponses.asyncSendServerError request
-    // Response.asyncSendJson request {
-    //      name = "Uwe"
-    //      email = "uriegel@hotmail.de"
-    //      nothing = null
-    // } 
+    Response.asyncSendJson request {
+        name = "Uwe"
+        email = "uriegel@hotmail.de"
+        nothing = null
+    } 
 
 let onClosed id = 
     match serverSentEvent with
