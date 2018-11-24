@@ -63,7 +63,8 @@ module Request11Session =
                         let headersToSerialize = responseHeaders |> List.filter (fun n -> n.key <> HeaderKey.StatusOK
                                                                                         && n.key <> HeaderKey.Status304
                                                                                         && n.key <> HeaderKey.Status404
-                                                                                        && n.key <> HeaderKey.Status301)
+                                                                                        && n.key <> HeaderKey.Status301
+                                                                                        && n.key <> HeaderKey.Status500)
                         // TODO:
                         // if (!headers.ContainsKey("Content-Length"))
                         //     headers["Connection"] = "close";
@@ -93,6 +94,7 @@ module Request11Session =
                                 | IsStatus HeaderKey.Status404 _ -> "404 Not Found"
                                 | IsStatus HeaderKey.Status304 _ -> "304 Not Modified"
                                 | IsStatus HeaderKey.Status301 _ -> "301 Moved Permanently"
+                                | IsStatus HeaderKey.Status500 _ -> "500 Server Error"
                                 | _ -> failwith "No status"
 
                         let headerStrings = headersToSerialize |> List.map createHeaderStringValue

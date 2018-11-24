@@ -1,7 +1,7 @@
 namespace WebServer
 
 module FixedResponses =
-    let asyncSendNotModifed socketSession request =
+    let asyncSendNotModifed request =
         request.categoryLogger.lowTrace <| fun () -> "304 Not Modified"
         (
             request,
@@ -10,7 +10,7 @@ module FixedResponses =
         )
         |> Response.asyncSendBytes
 
-    let asyncSendMovedPermanently socketSession request location =
+    let asyncSendMovedPermanently request location =
         request.categoryLogger.lowTrace <| fun () -> "301 Moved Permanently"
         (
             request,
@@ -23,7 +23,7 @@ module FixedResponses =
         |> Response.insertHtml
         |> Response.asyncSendBytes
 
-    let asyncSendNotFound socketSession request =
+    let asyncSendNotFound request =
         request.categoryLogger.lowTrace <| fun () -> "404 Not Found"
         (
             request, 
@@ -33,7 +33,7 @@ module FixedResponses =
         |> Response.insertHtml
         |> Response.asyncSendBytes
 
-    let asyncSendSseAccept socketSession request =
+    let asyncSendSseAccept request =
         request.categoryLogger.lowTrace <| fun () -> "Accepting SSE request"
         (
             request,
@@ -43,4 +43,14 @@ module FixedResponses =
             ],
             None
         )
+        |> Response.asyncSendBytes
+
+    let asyncSendServerError request =
+        request.categoryLogger.lowTrace <| fun () -> "500 Server Error"
+        (
+            request,
+            [ { key = HeaderKey.Status500; value = None } ],
+            (Some <| Html.get "<h1>Error</h1><p>General Server Error occurred.</p>")
+        )
+        |> Response.insertHtml
         |> Response.asyncSendBytes

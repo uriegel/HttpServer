@@ -37,7 +37,7 @@ module RequestProcessing =
             
             match request with
             | IsTlsRedirect -> 
-                do! FixedResponses.asyncSendMovedPermanently socketSession request 
+                do! FixedResponses.asyncSendMovedPermanently request 
                         ("https://" + configuration.domainName + 
                         (if configuration.tlsPort = 443 then "" else sprintf ":%d" configuration.tlsPort) + 
                         request.data.header.path)
@@ -45,13 +45,13 @@ module RequestProcessing =
             | IsFileSystem value -> 
                 match value with
                 | File value -> do! serveFileSystem socketSession request value
-                | Redirection value -> do! FixedResponses.asyncSendMovedPermanently socketSession request value
+                | Redirection value -> do! FixedResponses.asyncSendMovedPermanently request value
             | CheckSse value -> 
                 let context = {
                     request = request.data
                     send = Response.createSseProcessor request
                 }
                 value context |> ignore
-                do! FixedResponses.asyncSendSseAccept socketSession request
-            | _ -> do! FixedResponses.asyncSendNotFound socketSession request
+                do! FixedResponses.asyncSendSseAccept request
+            | _ -> do! FixedResponses.asyncSendNotFound request
         }

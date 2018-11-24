@@ -109,7 +109,7 @@ module FileSystem =
                     | None -> false
 
                 if notModified then
-                    do! asyncSendNotModifed socketSession request
+                    do! asyncSendNotModifed request
                 else
                     let contentType = 
                         match info.Extension.ToLower () with
