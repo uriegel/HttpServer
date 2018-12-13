@@ -58,7 +58,7 @@ let main argv =
             Configuration.defaultConfiguration with 
                 webroot = "../webroot"
                 isTlsEnabled = true
-                tlsRedirect = true
+                tlsRedirect = false
                 tlsPort = 4433
                 //Http2 = true
                 certificate = certificate

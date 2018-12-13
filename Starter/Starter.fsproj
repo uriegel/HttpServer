@@ -10,7 +10,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\WebServer\Webserver.fsproj" />
+    <ProjectReference Include="..\WebServer\WebServer.fsproj" />
   </ItemGroup>
 
 </Project>
